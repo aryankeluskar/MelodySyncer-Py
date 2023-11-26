@@ -1,5 +1,7 @@
 .env
 *.json
 .cache
+__pycache__/
 
-# .json contain some private testing files
+*.json 
+#contain some private testing files

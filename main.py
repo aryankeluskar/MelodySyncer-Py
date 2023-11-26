@@ -1,6 +1,3 @@
-# import subprocess
-# import sys
-
 import json
 import os
 import spotipy
@@ -44,25 +41,8 @@ def getTrackDurationYT(videoID):
     # print(contentResponse.json())
     ISODuration = contentResponse.json()['items'][0]['contentDetails']['duration']
     # print(ISODuration)
-    
-    if 'H' in ISODuration and 'M' in ISODuration and 'S' in ISODuration:
-        videoDuration = int(ISODuration[ISODuration.find('T')+1:ISODuration.find('H')])*3600000 + int(ISODuration[ISODuration.find('H')+1:ISODuration.find('M')])*60000 + int(ISODuration[ISODuration.find('M')+1:ISODuration.find('S')])*1000
-    elif 'H' in ISODuration and 'M' in ISODuration:
-        videoDuration = int(ISODuration[ISODuration.find('T')+1:ISODuration.find('H')])*3600000 + int(ISODuration[ISODuration.find('H')+1:ISODuration.find('M')])*60000
-    elif 'H' in ISODuration and 'S' in ISODuration:
-        videoDuration = int(ISODuration[ISODuration.find('T')+1:ISODuration.find('H')])*3600000 + int(ISODuration[ISODuration.find('H')+1:ISODuration.find('S')])*1000
-    elif 'M' in ISODuration and 'S' in ISODuration:
-        videoDuration = int(ISODuration[ISODuration.find('T')+1:ISODuration.find('M')])*60000 + int(ISODuration[ISODuration.find('M')+1:ISODuration.find('S')])*1000
-    elif 'H' in ISODuration:
-        videoDuration = int(ISODuration[ISODuration.find('T')+1:ISODuration.find('H')])*3600000
-    elif 'M' in ISODuration:
-        videoDuration = int(ISODuration[ISODuration.find('T')+1:ISODuration.find('M')])*60000
-    elif 'S' in ISODuration:
-        videoDuration = int(ISODuration[ISODuration.find('T')+1:ISODuration.find('S')])*1000
-    else:
-        videoDuration = 0
-    
-    return videoDuration
+    return requests.get(f'https://iso-duration-converter.onrender.com/convertFromISO/?duration={ISODuration}').json()
+     
 
 
 '''
@@ -95,12 +75,8 @@ def searchTrackYT(songName, artistName, albumName, songDuration):
         return None
     
     accuracyScore = 0
-
-    # videoIndexCounter = 0
-    # while response.json()['items'][videoIndexCounter]['id']['kind'] == 'youtube#playlist':
-    #     videoIndexCounter += 1
     
-
+    # print(response.json()['items'])
     mostAccurate = response.json()['items'][0]['id']['videoId'] # Default value is first video
     
 
@@ -132,7 +108,7 @@ def searchTrackYT(songName, artistName, albumName, songDuration):
             mostAccurate = videoID
 
         # print("Reahced 99")
-        # print(item['snippet']['channelTitle'], currAccuracyScore, videoID)
+        print(item['snippet']['channelTitle'], currAccuracyScore, videoID)
 
     return str(mostAccurate)
 
@@ -148,7 +124,7 @@ def convertPlaylist(playlistID):
         # print(song['track']['name']+" "+song['track']['album']['name'])
         currYTURL = str("https://youtube.com/watch?v="+str(searchTrackYT(song['track']['name'], song['track']['artists'][0]['name'], song['track']['album']['name'], song['track']['duration_ms'])))
         youtubeURLs.append(currYTURL)
-        # print(song['track']['name']+" "+currYTURL)
+        print(song['track']['name']+" "+currYTURL)
     # print(youtubeURLs)
     return youtubeURLs
 
@@ -156,8 +132,38 @@ def convertPlaylist(playlistID):
 # json.dump(getPlaylistTracksSP('7s6tR8GAGubasdzEDmNdXn'), outFile, indent=0)
 # outFile.close()
 
-InPlaylistID = input("Enter playlist ID: ")
-print(convertPlaylist(InPlaylistID))
+def buildPlaylistFromList(name="New Playlist", description="Playlist transferred from Spotify with use of MelodySyncer", listOfIDs=[]):
+   # Future Feature
+    pass
+    
+
+# InPlaylistID = input("Enter playlist ID: ")
+# print(convertPlaylist(InPlaylistID))
+
+
+from fastapi import FastAPI
+from spotipy.oauth2 import SpotifyClientCredentials
+app = FastAPI()
+
+
+@app.get("/")
+async def root():
+    return "Welcome to MelodySyncer! Transfer your Spotify Playlist to an amazing Youtube Playlist. Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
+
+@app.get("/help")
+async def root():
+    return "Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
+
+@app.get("/convertSong/")
+async def read_item(songID: str = '2zVaxB54fNngkbWs5uZnla'):
+   sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+   track = sp.track(songID)
+   return str("https://youtube.com/watch?v="+str(searchTrackYT(track['name'], track['artists'][0]['name'], track['album']['name'], track['duration_ms'])))
+   # return str("https://youtube.com/watch?v="+str((track['name'], track['artists'][0]['name'], track['album']['name'], track['duration_ms'])))
+
+@app.get("/convertPlaylist/")
+async def read_item(playlistID: str = '2zVaxB54fNngkbWs5uZnla'):
+   return convertPlaylist(playlistID)
 
 # print("https://youtube.com/watch?v="+searchTrackYT("OHMAMI","Chase Atlantic", "OHMAMI", 226835))
 # print("https://youtube.com/watch?v="+searchTrackYT("Poker Face","Lady Gaga", "The Name", 237200))
