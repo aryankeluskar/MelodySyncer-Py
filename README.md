@@ -1,4 +1,4 @@
-# Most Accurate Spotify to Youtube API Ever! Presenting MelodySyncer (Beginning Operation in December '23)
+# Most Accurate Spotify to Youtube API Ever! Presenting MelodySyncer (Beginning Public Operation in December '23)
 Built using Python, FastAPI, hosted on Render.com <br>
 Simple-to-use **Web API** to convert Spotify songs or playlists to their Youtube equivalent. 
 #### You get: _Skip manual searching, Directly get a List, Peace of Mind_ <br> I get _(hopefully): Star, Heart, Follow :)_
