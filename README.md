@@ -6,8 +6,7 @@ Built using Python, FastAPI, hosted on Render.com <br> MelodySyncer, or MeSo for
     Requirements: gh, pip, python 3.12+
     Run the following commands:
     gh repo clone aryankeluskar/MelodySyncer
-    pip install fastapi
-    pip install "uvicorn[standard]"
+    pip install -r requirements.txt
 
 
 ## Run the app (Only if local instance needed)
