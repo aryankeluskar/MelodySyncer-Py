@@ -1,10 +1,10 @@
+from fastapi import FastAPI
+from spotipy.oauth2 import SpotifyClientCredentials
 import json
 import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-
 from dotenv import load_dotenv
-
 import requests
 
 load_dotenv()
@@ -141,8 +141,6 @@ def buildPlaylistFromList(name="New Playlist", description="Playlist transferred
 # print(convertPlaylist(InPlaylistID))
 
 
-from fastapi import FastAPI
-from spotipy.oauth2 import SpotifyClientCredentials
 app = FastAPI()
 
 
@@ -155,7 +153,9 @@ async def root():
     return "Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
 
 @app.get("/convertSong/")
-async def read_item(songID: str = '2zVaxB54fNngkbWs5uZnla'):
+async def read_item(songID: str = ''):
+   if(len(songID)) == 0:
+      return "Invalid Song ID"
    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
    track = sp.track(songID)
    return str("https://youtube.com/watch?v="+str(searchTrackYT(track['name'], track['artists'][0]['name'], track['album']['name'], track['duration_ms'])))
