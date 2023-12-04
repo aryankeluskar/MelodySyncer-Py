@@ -31,7 +31,7 @@ Example: http://MelodySyncer.onrender.com/convertPlaylist/?playlistID=1YfR61247o
 <hr>
 
 ### GET /convertPlaylist
-    Parameters: playlistID (int) Soptify ID of the Playlist
+    Parameters: playlistID (string) Soptify ID of the Playlist
     Response: (list of str) List / Array of Strings, each element contains the Youtube URL for the song. The indices remain same from Spotify Playlist
     
 ## Support this project!
