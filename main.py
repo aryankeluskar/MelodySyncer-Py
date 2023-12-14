@@ -1,3 +1,4 @@
+import time
 from fastapi import FastAPI
 from spotipy.oauth2 import SpotifyClientCredentials
 import json
@@ -148,6 +149,7 @@ def searchTrackYT(songName, artistName, albumName, songDuration):
 
 
 def convertPlaylist(playlistID):
+    t0 = time.time()
     playlistResults = getPlaylistTracksSP(playlistID)
     currAnalytics = getAnalytics()
     setAnalytics(
@@ -171,8 +173,11 @@ def convertPlaylist(playlistID):
         )
         youtubeURLs.append(currYTURL)
         print(song["track"]["name"] + " " + currYTURL)
-    # print(youtubeURLs)
+    t1 = time.time()
+    print("Total time taken: "+str(t1 - t0))
+    print("Avg time per song: "+str((t1 - t0) / len(playlistResults["items"])))
     return youtubeURLs
+      
 
 
 # outFile = open("sample.json", "w")
