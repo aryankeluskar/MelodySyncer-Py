@@ -149,7 +149,8 @@ def searchTrackYT(songName, artistName, albumName, songDuration):
 
 
 def convertPlaylist(playlistID):
-    t0 = time.time()
+    print("received request for playlist ID " + playlistID)
+   #  t0 = time.time()
     playlistResults = getPlaylistTracksSP(playlistID)
     currAnalytics = getAnalytics()
     setAnalytics(
@@ -173,11 +174,10 @@ def convertPlaylist(playlistID):
         )
         youtubeURLs.append(currYTURL)
         print(song["track"]["name"] + " " + currYTURL)
-    t1 = time.time()
-    print("Total time taken: "+str(t1 - t0))
-    print("Avg time per song: "+str((t1 - t0) / len(playlistResults["items"])))
+   #  t1 = time.time()
+   #  print("Total time taken: " + str(t1 - t0))
+   #  print("Avg time per song: " + str((t1 - t0) / len(playlistResults["items"])))
     return youtubeURLs
-      
 
 
 # outFile = open("sample.json", "w")
@@ -300,20 +300,27 @@ async def read_item(songID: str = ""):
     )
     sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
     track = sp.track(songID)
-    return str(
-        "https://youtube.com/watch?v="
-        + str(
-            searchTrackYT(
-                track["name"],
-                track["artists"][0]["name"],
-                track["album"]["name"],
-                track["duration_ms"],
+    try:
+        return str(
+            "https://youtube.com/watch?v="
+            + str(
+                searchTrackYT(
+                    track["name"],
+                    track["artists"][0]["name"],
+                    track["album"]["name"],
+                    track["duration_ms"],
+                )
             )
         )
-    )
+    except Exception as e:
+        return "Check your song ID again"
     # return str("https://youtube.com/watch?v="+str((track['name'], track['artists'][0]['name'], track['album']['name'], track['duration_ms'])))
 
 
 @app.get("/convertPlaylist/")
 async def read_item(playlistID: str = "2zVaxB54fNngkbWs5uZnla"):
-    return convertPlaylist(playlistID)
+    print("received request for playlist ID " + playlistID)
+    try:
+        return convertPlaylist(playlistID)
+    except Exception as e:
+        return "Check your playlist ID again"
