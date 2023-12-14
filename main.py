@@ -33,7 +33,6 @@ def getPlaylistTracksSP(UserPlaylistID):
     for song in playlistResults["items"]:
         pass
         # print(song['track']['name']+" "+song['track']['album']['name'])
-
     return playlistResults
 
 
@@ -136,7 +135,7 @@ def searchTrackYT(songName, artistName, albumName, songDuration):
             mostAccurate = videoID
 
         # print("Reahced 99")
-        print(item["snippet"]["channelTitle"], currAccuracyScore, videoID)
+    #   print(item["snippet"]["channelTitle"], currAccuracyScore, videoID)
 
     return str(mostAccurate)
 
@@ -150,6 +149,12 @@ def searchTrackYT(songName, artistName, albumName, songDuration):
 
 def convertPlaylist(playlistID):
     playlistResults = getPlaylistTracksSP(playlistID)
+    currAnalytics = getAnalytics()
+    setAnalytics(
+        currAnalytics["document"]["totalCalls"] + 1,
+        currAnalytics["document"]["songsConverted"] + len(playlistResults["items"]),
+        currAnalytics["document"]["playlistsConverted"] + 1,
+    )
     youtubeURLs = []
     for song in playlistResults["items"]:
         # print(song['track']['name']+" "+song['track']['album']['name'])
@@ -220,6 +225,14 @@ def getAnalytics():
     return json_response
 
 
+"""
+   @param newCalls: Number of new calls to be set.
+   @param newSongs: Number of new songs to be set.
+   @param newPlaylists: Number of new playlists to be set.
+   @return None
+"""
+
+
 def setAnalytics(newCalls: int = 0, newSongs: int = 0, newPlaylists: int = 0):
     headers = {
         "apiKey": os.getenv("MONGODP_APIKEY"),
@@ -257,7 +270,11 @@ app = FastAPI()
 @app.get("/")
 async def root():
     currAnalytics = getAnalytics()
-    setAnalytics(currAnalytics["document"]["totalCalls"] + 1, currAnalytics["document"]["songsConverted"], currAnalytics["document"]["playlistsConverted"])
+    setAnalytics(
+        currAnalytics["document"]["totalCalls"] + 1,
+        currAnalytics["document"]["songsConverted"],
+        currAnalytics["document"]["playlistsConverted"],
+    )
     return "Welcome to MelodySyncer! Transfer your Spotify Playlist to an amazing Youtube Playlist. Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
 
 
@@ -270,6 +287,12 @@ async def root():
 async def read_item(songID: str = ""):
     if (len(songID)) == 0:
         return "Invalid Song ID"
+    currAnalytics = getAnalytics()
+    setAnalytics(
+        currAnalytics["document"]["totalCalls"] + 1,
+        currAnalytics["document"]["songsConverted"] + 1,
+        currAnalytics["document"]["playlistsConverted"],
+    )
     sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
     track = sp.track(songID)
     return str(
@@ -289,7 +312,3 @@ async def read_item(songID: str = ""):
 @app.get("/convertPlaylist/")
 async def read_item(playlistID: str = "2zVaxB54fNngkbWs5uZnla"):
     return convertPlaylist(playlistID)
-
-
-# setAnalytics(newCalls=1, newSongs=1, newPlaylists=1)
-# print(getAnalytics())
