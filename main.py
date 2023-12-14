@@ -269,7 +269,7 @@ def setAnalytics(newCalls: int = 0, newSongs: int = 0, newPlaylists: int = 0):
 # print(convertPlaylist(InPlaylistID))
 
 
-app = FastAPI()
+app = FastAPI(debug=True)
 
 
 @app.get("/")
