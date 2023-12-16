@@ -318,9 +318,10 @@ async def read_item(songID: str = ""):
 
 
 @app.get("/convertPlaylist/")
-async def read_item(playlistID: str = ""):
+async def root(playlistID: str = ""):
     print("received request for playlist ID " + playlistID)
-    try:
-        return convertPlaylist(playlistID)
-    except Exception as e:
-        return "Check your playlist ID again"
+    return "received request for playlist ID " + playlistID
+   #  try:
+   #      return convertPlaylist(playlistID)
+   #  except Exception as e:
+   #      return "Check your playlist ID again"
