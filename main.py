@@ -17,7 +17,7 @@ load_dotenv()
 """
 
 
-def getPlaylistTracksSP(UserPlaylistID):
+def getPlaylistTracksSP(UserPlaylistID) -> json:
     scope = "user-library-read"
 
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
@@ -45,7 +45,7 @@ def getPlaylistTracksSP(UserPlaylistID):
 """
 
 
-def getTrackDurationYT(videoID):
+def getTrackDurationYT(videoID) -> int:
     contentResponse = requests.get(
         f'https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv("YOUTUBE_API_KEY")}&id={videoID}'
     )
@@ -69,7 +69,7 @@ def getTrackDurationYT(videoID):
 """
 
 
-def searchTrackYT(songName, artistName, albumName, songDuration):
+def searchTrackYT(songName, artistName, albumName, songDuration) -> str:
     searchQuery = (
         str(songName)
         + " "
@@ -148,7 +148,7 @@ def searchTrackYT(songName, artistName, albumName, songDuration):
 """
 
 
-def convertPlaylist(playlistID):
+def convertPlaylist(playlistID) -> list:
     print("received request for playlist ID " + playlistID)
    #  t0 = time.time()
     playlistResults = getPlaylistTracksSP(playlistID)
@@ -185,7 +185,7 @@ def convertPlaylist(playlistID):
 # outFile.close()
 
 
-def buildPlaylistFromList(
+def buildPlaylistFromList( 
     name="New Playlist",
     description="Playlist transferred from Spotify with use of MelodySyncer",
     listOfIDs=[],
@@ -201,7 +201,7 @@ def buildPlaylistFromList(
 """
 
 
-def getAnalytics():
+def getAnalytics() -> json:
     # Perform analytics calculations
     payload = json.dumps(
         {
@@ -238,7 +238,7 @@ def getAnalytics():
 """
 
 
-def setAnalytics(newCalls: int = 0, newSongs: int = 0, newPlaylists: int = 0):
+def setAnalytics(newCalls: int = 0, newSongs: int = 0, newPlaylists: int = 0) -> str:
     headers = {
         "apiKey": os.getenv("MONGODP_APIKEY"),
         "Content-Type": "application/ejson",
@@ -261,8 +261,9 @@ def setAnalytics(newCalls: int = 0, newSongs: int = 0, newPlaylists: int = 0):
     response = requests.post(
         os.getenv("MONGODB_UPDATEURL"), headers=headers, data=json.dumps(payload)
     )
+    print("setting analytics\n")
     print(response.text)
-    print("setting analytics")
+    return response.text
 
 
 # InPlaylistID = input("Enter playlist ID: ")
@@ -273,7 +274,7 @@ app = FastAPI(debug=True)
 
 
 @app.get("/")
-async def root():
+async def root() -> str:
     currAnalytics = getAnalytics()
     setAnalytics(
         currAnalytics["document"]["totalCalls"] + 1,
@@ -284,12 +285,12 @@ async def root():
 
 
 @app.get("/help")
-async def root():
+async def root() -> str:
     return "Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
 
 
-@app.get("/convertSong/")
-async def read_item(songID: str = ""):
+@app.get("/convertSong/") 
+async def read_item(songID: str = "") -> str:
     if (len(songID)) == 0:
         return "Invalid Song ID"
     currAnalytics = getAnalytics()
@@ -318,10 +319,10 @@ async def read_item(songID: str = ""):
 
 
 @app.get("/convertPlaylist/")
-async def root(playlistID: str = ""):
+async def root(playlistID: str = "") -> str:
     print("received request for playlist ID " + playlistID)
-    return "received request for playlist ID " + playlistID
-   #  try:
-   #      return convertPlaylist(playlistID)
-   #  except Exception as e:
-   #      return "Check your playlist ID again"
+   #  return "received request for playlist ID " + playlistID
+    try:
+        return convertPlaylist(playlistID)
+    except Exception as e:
+        return "Check your playlist ID again"
