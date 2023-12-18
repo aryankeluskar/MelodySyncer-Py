@@ -148,7 +148,7 @@ def searchTrackYT(songName, artistName, albumName, songDuration) -> str:
 """
 
 
-def convertPlaylist(playlistID) -> list:
+def convertPlaylist(playlistID):
     print("received request for playlist ID " + playlistID)
    #  t0 = time.time()
     playlistResults = getPlaylistTracksSP(playlistID)
@@ -319,7 +319,7 @@ async def read_item(songID: str = "") -> str:
 
 
 @app.get("/convertPlaylist/")
-async def root(playlistID: str = "") -> str:
+async def root(playlistID: str = ""):
     print("received request for playlist ID " + playlistID)
    #  return "received request for playlist ID " + playlistID
     try:
