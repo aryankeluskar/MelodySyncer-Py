@@ -284,12 +284,12 @@ async def root() -> str:
     return "Welcome to MelodySyncer! Transfer your Spotify Playlist to an amazing Youtube Playlist. Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
 
 
-@app.get("/help")
+@app.get("/api/help")
 async def root() -> str:
     return "Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
 
 
-@app.get("/convertSong/") 
+@app.get("/api/convertSong/") 
 async def read_item(songID: str = "") -> str:
     if (len(songID)) == 0:
         return "Invalid Song ID"
@@ -318,7 +318,7 @@ async def read_item(songID: str = "") -> str:
     # return str("https://youtube.com/watch?v="+str((track['name'], track['artists'][0]['name'], track['album']['name'], track['duration_ms'])))
 
 
-@app.get("/convertPlaylist/")
+@app.get("/api/convertPlaylist/")
 async def root(playlistID: str = ""):
     print("received request for playlist ID " + playlistID)
    #  return "received request for playlist ID " + playlistID
