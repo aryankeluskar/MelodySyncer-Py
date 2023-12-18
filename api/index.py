@@ -273,7 +273,7 @@ def setAnalytics(newCalls: int = 0, newSongs: int = 0, newPlaylists: int = 0) ->
 app = FastAPI(debug=True)
 
 
-@app.get("/")
+@app.get("/api/")
 async def root() -> str:
     currAnalytics = getAnalytics()
     setAnalytics(
