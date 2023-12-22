@@ -213,7 +213,7 @@ async def searchTrackYT(
     )
     #  print(searchQuery)
     searchQuery = searchQuery.replace(" ", "%20")
-    print("searching for " + searchQuery)
+   #  print("searching for " + searchQuery)
 
     async with aiohttp.ClientSession() as session:
         async with aiohttp.ClientSession() as session:
