@@ -7,6 +7,11 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 import requests
+import aiohttp
+import asyncio
+from functools import partial
+from concurrent.futures import ThreadPoolExecutor
+
 
 load_dotenv()
 
@@ -317,12 +322,134 @@ async def read_item(songID: str = "") -> str:
         return "Check your song ID again"
     # return str("https://youtube.com/watch?v="+str((track['name'], track['artists'][0]['name'], track['album']['name'], track['duration_ms'])))
 
+"""
 
-@app.get("/convertPlaylist/")
-async def root(playlistID: str = "") -> str:
-    print("received request for playlist ID " + playlistID)
-   #  return "received request for playlist ID " + playlistID
-    try:
-        return convertPlaylist(playlistID)
-    except Exception as e:
-        return "Check your playlist ID again"
+   ASYNC FUNCTIONS
+
+"""
+
+
+@app.get("/api/playlist")
+async def hello_world(query: str = ""):
+    # start timer at start, end timer at end, print total time taken
+
+    print("received request for " + query)
+    #  try:
+    return await AS_convertPlaylist(query)
+
+
+#  except Exception as e:
+#      return {"error": str(e)}
+
+
+async def AS_convertPlaylist(playlistID):
+   print("received request for playlist ID " + playlistID)
+   playlistResults = await AS_getPlaylistTracksSP(playlistID)
+   youtubeURLs = []
+   tasks = []
+   for song in playlistResults["items"]:
+      task = asyncio.create_task(
+         AS_searchTrackYT(
+            song["track"]["name"],
+            song["track"]["artists"][0]["name"],
+            song["track"]["album"]["name"],
+            song["track"]["duration_ms"],
+            youtubeURLs,
+         )
+      )
+      tasks.append(task)
+   await asyncio.gather(*tasks)
+   for i in range(len(youtubeURLs)):
+      youtubeURLs[i] = "https://youtube.com/watch?v=" + str(youtubeURLs[i])
+   return youtubeURLs
+
+
+async def AS_searchTrackYT(
+   songName, artistName, albumName, songDuration, youtubeURLs
+) -> str:
+   searchQuery = (
+      str(songName)
+      + " "
+      + str(albumName)
+      + " "
+      + str(artistName)
+      + " "
+      + "Official Audio"
+   )
+   print(searchQuery)
+   searchQuery.replace(" ", "%20")
+
+   async with aiohttp.ClientSession() as session:
+      async with session.get(
+         f'https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY")}'
+      ) as response:
+         if response.status == 200:
+            pass
+         else:
+            print("Error:", response.status)
+            return None
+
+         accuracyScore = 0
+         response_json = await response.json()
+         mostAccurate = response_json["items"][0]["id"]["videoId"]
+
+         for item in response_json["items"]:
+            videoID = item["id"]["videoId"]
+            currAccuracyScore = 0
+
+            if "Topic" in item["snippet"]["channelTitle"]:
+               currAccuracyScore += 2
+
+            if (
+               "Official Audio" in item["snippet"]["title"]
+               or "Full Audio Song" in item["snippet"]["title"]
+            ):
+               currAccuracyScore += 2
+
+            videoDuration_coroutine = AS_getTrackDurationYT(session, videoID)
+            videoDuration_res = await videoDuration_coroutine
+            print(str(videoDuration_res))
+            videoDuration = int(videoDuration_res)
+
+            if abs(int(videoDuration) - songDuration) <= 2000:
+               currAccuracyScore += 5
+
+            if currAccuracyScore > accuracyScore:
+               accuracyScore = currAccuracyScore
+               mostAccurate = videoID
+
+         youtubeURLs.append(mostAccurate)
+         return str(mostAccurate)
+
+
+def run_sync(func, *args, **kwargs):
+   loop = asyncio.get_running_loop()
+   partial_func = partial(func, *args, **kwargs)
+   return loop.run_in_executor(ThreadPoolExecutor(), partial_func)
+
+
+def AS_getPlaylistTracksSP(UserPlaylistID) -> json:
+   scope = "user-library-read"
+   sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
+
+   return run_sync(
+      sp.playlist_tracks,
+      UserPlaylistID,
+      fields="items(track(name, duration_ms, album(name), artists(name)))",
+      limit=100,
+      offset=0,
+      market=None,
+   )
+
+
+async def AS_getTrackDurationYT(session, videoID) -> int:
+   async with session.get(
+      f'https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv("YOUTUBE_API_KEY")}&id={videoID}'
+   ) as contentResponse:
+      content_json = await contentResponse.json()
+      ISODuration = content_json["items"][0]["contentDetails"]["duration"]
+      async with session.get(
+         f"https://iso-duration-converter.onrender.com/convertFromISO/?duration={ISODuration}"
+      ) as response:
+         response_json = await response.json()
+         return int(response_json)
