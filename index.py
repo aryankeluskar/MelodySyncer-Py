@@ -233,7 +233,7 @@ async def searchTrackYT(
                 mostAccurate = ""
                 # response_json = await response.json()
                 #  mostAccurate = response["items"][0]["id"]["videoId"]
-                print("searching for " + str(response))
+               #  print("searching for " + str(response))
                 for item in response["items"]:
                     videoID = item["id"]["videoId"]
                     currAccuracyScore = 0
