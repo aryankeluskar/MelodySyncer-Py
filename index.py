@@ -24,14 +24,11 @@ app = FastAPI()
 app.mount("/app", StaticFiles(directory="app"), name="app")
 
 
-# """
-# @route: /
-# @description: the root route
-# @returns: a welcome message
-# """
-# @app.get("/")
-# async def root() -> str:
-#     return "Welcome to MelodySyncer! Transfer your Spotify Playlist to an amazing Youtube Playlist. Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
+"""
+@route: /
+@description: the root route
+@returns: a welcome frontend page written in HTML
+"""
 
 
 @app.get("/")
@@ -103,11 +100,10 @@ async def hello_world(query: str = "", youtubeAPIKEY: str = ""):
     if youtubeAPIKEY == "default":
         youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
 
-    print("received playlist request for " + query)
     try:
         async with aiohttp.ClientSession() as session:
+            print("received playlist request for " + query)
             t0 = time.time()
-            print("received request for playlist ID " + query)
             playlistResults = await getPlaylistTracksSP(query)
             youtubeURLs = ["" for _ in range(len(playlistResults["items"]))]
             res_task = asyncio.ensure_future(
@@ -135,7 +131,7 @@ async def hello_world(query: str = "", youtubeAPIKEY: str = ""):
                 tasks.append(task)
             await asyncio.gather(*tasks)
             res = await res_task
-            print(res)
+            # print(res)
             t1 = time.time()
             for i in range(len(youtubeURLs)):
                 if youtubeURLs[i] == "Check your YouTube API key":
@@ -164,12 +160,13 @@ Returns: a youtube URL
 async def hello_world(query: str = "", youtubeAPIKEY: str = ""):
     # start timer at start, end timer at end, print total time taken
     # verify if youtubeAPIKEY is given, otherwise return string saying check your API key
+    t0 = time.time()
+
     if youtubeAPIKEY == "":
         return "Check your API key again"
     if youtubeAPIKEY == "default":
         youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
 
-    t0 = time.time()
     try:
         async with aiohttp.ClientSession() as session:
             print("received song request for " + query)
@@ -205,13 +202,12 @@ async def hello_world(query: str = "", youtubeAPIKEY: str = ""):
                     youtubeAPIKEY,
                     -1,
                 )
-                print(vidID)
                 if vidID == "Check your YouTube API key":
-                     return "Check your YouTube API key"
-                        
+                    return "Check your YouTube API key"
+
             vidID_final = await vidID
             res = await res_task
-            print(res)
+            # print(res)
             t1 = time.time()
             print("Total time taken: " + str(t1 - t0))
             return "https://youtube.com/watch?v=" + str(vidID_final)
@@ -266,7 +262,7 @@ async def setAnalytics(
         data=json.dumps(payload),
     )
     if response:
-        print(response)
+        print("was database modification successful? " + str(response))
         # print("setting analytics\n")
         #  print(response.text)
         #  return response.text
@@ -322,7 +318,7 @@ async def searchTrackYT(
         f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={youtubeAPIKEY}",
     )
     if response == "ERROR":
-         return "Check your YouTube API key"
+        return "Check your YouTube API key"
 
     # print(response)
 
