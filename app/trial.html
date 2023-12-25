@@ -132,8 +132,8 @@
 
    <nav>
       <a href="./index.html">Home</a>
-      <a href="">Try in Postman</a>
-      <a href="https://github.com/aryankeluskar/MelodySyncer">GitHub Repo</a>
+      <a href="" target="_blank">Try in Postman</a>
+      <a href="https://github.com/aryankeluskar/MelodySyncer" target="_blank">GitHub Repo</a>
    </nav>
 
    <main>
@@ -174,25 +174,15 @@
       if (inputQuery.value.includes("open.spotify.com")) {
          if (inputQuery.value.includes("track")) {
             // progressBar.style.animation = "progressBarAnimation 2s linear";
-            var xhr = new XMLHttpRequest();
             if (document.getElementById("inputAPIKEY").value == "") {
                backendQuery = "https://melodysyncer.onrender.com/api/song?query=" + inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6) + "&youtubeAPIKEY=default";
             }
             else {
                backendQuery = "https://melodysyncer.onrender.com/api/song?query=" + inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6) + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
             }
-            // console.log(backendQuery);
-            xhr.open("GET", backendQuery, false);
-            // xhr.onload = function () {
-            //    // Hide the progress bar after receiving the response
-            //    progressContainer.style.display = "none";
-            // };
-            xhr.send();
+         }
 
-            document.getElementById("outputURL").value = backendQuery;
-            document.getElementById("outputArea").value = xhr.responseText;
-         } else if (inputQuery.value.includes("playlist")) {
-            var xhr = new XMLHttpRequest();
+         else if (inputQuery.value.includes("playlist")) {
             // if api input is empty, then the backend will use the default api key which is stored in .env
 
             if (document.getElementById("inputAPIKEY").value == "") {
@@ -201,17 +191,21 @@
             else {
                backendQuery = "https://melodysyncer.onrender.com/api/playlist?query=" + inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9) + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
             }
-            // console.log(backendQuery);
-            xhr.open("GET", backendQuery, false);
-            xhr.send();
-            // xhr.onload = function () {
-            //    progressContainer.style.display = "none";
-            // };
-            document.getElementById("outputURL").value = backendQuery;
-            document.getElementById("outputArea").value = xhr.responseText;
-         } else {
-            alert("Invalid URL")
+
          }
+
+         var xhr = new XMLHttpRequest();
+         console.log(backendQuery);
+         document.getElementById("outputURL").value = backendQuery;
+         // console.log(backendQuery);
+         xhr.open("GET", backendQuery, false);
+         // xhr.onload = function () {
+         //    // Hide the progress bar after receiving the response
+         //    progressContainer.style.display = "none";
+         // };
+         xhr.send();
+
+         document.getElementById("outputArea").value = xhr.responseText;
       } else {
          alert("Invalid URL")
       }
