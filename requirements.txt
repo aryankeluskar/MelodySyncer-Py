@@ -1,5 +1,8 @@
-fastapi
 uvicorn
 requests
-spotipy
 python-dotenv
+aiohttp==3.9.1
+fastapi==0.105.0
+python-dotenv==1.0.0
+Requests==2.31.0
+spotipy==2.23.0

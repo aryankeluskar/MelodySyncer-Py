@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>MelodySyncer Trial</title>
+   <style>
+      body {
+         font-family: Arial, sans-serif;
+         margin: 0;
+         padding: 0;
+         background-color: #f2f2f2;
+      }
+
+      header {
+         background-color: #333;
+         color: white;
+         padding: 10px;
+         text-align: center;
+      }
+
+      nav {
+         display: flex;
+         justify-content: center;
+         background-color: #444;
+         padding: 10px;
+      }
+
+      nav a {
+         color: white;
+         text-decoration: none;
+         margin: 0 20px;
+      }
+
+      main {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         height: 80vh;
+      }
+
+      .content-container {
+         display: flexbox;
+         width: 60%;
+         background-color: white;
+         border-radius: 10px;
+         overflow: hidden;
+         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .left-section {
+         flex: 1;
+         padding: 20px;
+      }
+
+      .right-section {
+         flex: 1;
+         padding: 20px;
+         background-color: #f2f2f2;
+      }
+
+      .textbox {
+         width: 100%;
+         padding: 10px;
+         margin-bottom: 10px;
+         box-sizing: border-box;
+      }
+
+      .label {
+         font-weight: bold;
+      }
+
+      .button {
+         background-color: #333;
+         color: white;
+         padding: 10px;
+         border: none;
+         cursor: pointer;
+         border-radius: 5px;
+      }
+
+      .textarea {
+         width: 100%;
+         height: 100px;
+         padding: 10px;
+         box-sizing: border-box;
+      }
+
+      #outputURL {
+         height: 50px;
+         margin-bottom: 10px;
+      }
+
+      .progress-container {
+         display: none;
+         width: 100%;
+         height: 20px;
+         border-radius: 5px;
+         overflow: hidden;
+         margin-top: 10px;
+      }
+
+      .progress-bar {
+         height: 100%;
+         width: 0;
+         background: linear-gradient(to right, lightgreen, darkgreen);
+         animation: progressBarAnimation 2s linear;
+         /* Default animation duration for tracks */
+      }
+
+      @keyframes progressBarAnimation {
+         to {
+            width: 100%;
+         }
+      }
+
+      /* if width is below 700 then make content container has 90% width */
+      @media (max-width: 700px) {
+         .content-container {
+            width: 90%;
+         }
+      }
+   </style>
+</head>
+
+<body>
+
+   <header>
+      <h1>MelodySyncer</h1>
+   </header>
+
+   <nav>
+      <a href="./index.html">Home</a>
+      <a href="">Try in Postman</a>
+      <a href="https://github.com/aryankeluskar/MelodySyncer">GitHub Repo</a>
+   </nav>
+
+   <main>
+      <div class="content-container">
+         <div class="left-section">
+            <input id="inputQuery" type="text" class="textbox" placeholder="Paste the URL From Spotify...">
+            <input id="inputAPIKEY" type="text" class="textbox"
+               placeholder="Provide YouTube API Key (Optional but recommended since the trial is limited)">
+            <!-- <label class="label">Description:</label> -->
+            <p>The URL should be of a track or a playlist (can be verified by checking if the url
+               contains track or playlist) </p>
+            <button onclick="convert(document.getElementById('inputQuery'))" class="button">Convert!</button>
+            <!-- <div class="progress-container">
+               <div class="progress-bar" id="progressBar"></div>
+            </div> -->
+
+         </div>
+         <div class="right-section">
+            <textarea class="textarea" id="outputURL" disabled="false"
+               placeholder="The URL Request will be displayed here"></textarea>
+
+            <textarea class="textarea" id="outputArea" disabled="false"
+               placeholder="The output will be displayed here"></textarea>
+         </div>
+
+      </div>
+   </main>
+
+</body>
+
+<script>
+   function convert(inputQuery) {
+      // var progressBar = document.getElementById("progressBar");
+      // var progressContainer = document.querySelector(".progress-container");
+      // progressContainer.style.display = "block";
+
+
+      if (inputQuery.value.includes("open.spotify.com")) {
+         if (inputQuery.value.includes("track")) {
+            // progressBar.style.animation = "progressBarAnimation 2s linear";
+            var xhr = new XMLHttpRequest();
+            if (document.getElementById("inputAPIKEY").value == "") {
+               backendQuery = "http://localhost:8000/api/song?query=" + inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6) + "&youtubeAPIKEY=default";
+            }
+            else {
+               backendQuery = "http://localhost:8000/api/song?query=" + inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6) + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
+            }
+            xhr.open("GET", backendQuery, false);
+            // xhr.onload = function () {
+            //    // Hide the progress bar after receiving the response
+            //    progressContainer.style.display = "none";
+            // };
+            xhr.send();
+
+            document.getElementById("outputURL").value = backendQuery;
+            document.getElementById("outputArea").value = xhr.responseText;
+         } else if (inputQuery.value.includes("playlist")) {
+            var xhr = new XMLHttpRequest();
+            // if api input is empty, then the backend will use the default api key which is stored in .env
+
+            if (document.getElementById("inputAPIKEY").value == "") {
+               backendQuery = "http://localhost:8000/api/playlist?query=" + inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9) + "&youtubeAPIKEY=default";
+            }
+            else {
+               backendQuery = "http://localhost:8000/api/playlist?query=" + inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9) + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
+            }
+            xhr.open("GET", backendQuery, false);
+            xhr.send();
+            // xhr.onload = function () {
+            //    progressContainer.style.display = "none";
+            // };
+            document.getElementById("outputURL").value = backendQuery;
+            document.getElementById("outputArea").value = xhr.responseText;
+         } else {
+            alert("Invalid URL")
+         }
+      } else {
+         alert("Invalid URL")
+      }
+
+   }
+</script>
+
+</html>
