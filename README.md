@@ -40,4 +40,4 @@ Example: http://MelodySyncer.onrender.com/convertPlaylist/?playlistID=1YfR61247o
 ### This is my second ever API! Please consider leaving a 🌟 if this added value to your wonderful project
 ### Made with pure love and [freshman fascination](## "it's a real term i swear"). Visit my website at [aryankeluskar.github.io](https://aryankeluskar.github.io) <3
 ### Working:
-![Dataflow](./DataFlow.png){width=500}
+![Dataflow](./DataFlow.png)
