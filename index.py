@@ -13,6 +13,7 @@ from functools import partial
 import starlette
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 # import pymongo
 # re-push
@@ -23,6 +24,17 @@ load_dotenv()
 
 app = FastAPI()
 app.mount("/app", StaticFiles(directory="app"), name="app")
+
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 """
