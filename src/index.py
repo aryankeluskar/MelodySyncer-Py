@@ -14,51 +14,58 @@ app = FastAPI()
 import base64
 import requests
 
-@app.get("/token")
-async def token():
-   print("env file check: "+str(os.getenv("YOUTUBE_API_KEY")))
-   print("env file check: "+str(os.getenv("SPOTIPY_CLIENT_ID")))
-   print("env file check: "+str(os.getenv("SPOTIPY_CLIENT_SECRET")))
+
+"""
+route just for testing purposes
+"""
+# @app.get("/token")
+# async def token():
+#    print("env file check: "+str(os.getenv("YOUTUBE_API_KEY")))
+#    print("env file check: "+str(os.getenv("SPOTIPY_CLIENT_ID")))
+#    print("env file check: "+str(os.getenv("SPOTIPY_CLIENT_SECRET")))
    
-   client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
-   client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+#    client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
+#    client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
 
-   url = "https://accounts.spotify.com/api/token"
-   headers = {
-      "Authorization": "Basic "
-      + base64.b64encode(
-         (
-               str(os.getenv("SPOTIPY_CLIENT_ID"))
-               + ":"
-               + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
-         ).encode()
-      ).decode()
-   }
-   data = {"grant_type": "client_credentials"}
+#    url = "https://accounts.spotify.com/api/token"
+#    headers = {
+#       "Authorization": "Basic "
+#       + base64.b64encode(
+#          (
+#                str(os.getenv("SPOTIPY_CLIENT_ID"))
+#                + ":"
+#                + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+#          ).encode()
+#       ).decode()
+#    }
+#    data = {"grant_type": "client_credentials"}
 
-   response = requests.post(url, headers=headers, data=data).json()
+#    response = requests.post(url, headers=headers, data=data).json()
 
-   # curl --request GET \
-   #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
-   #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
+#    # curl --request GET \
+#    #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
+#    #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
 
-   playlist_id = "3cEYpjA9oz9GiPac4AsH4n"
-   url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-   headers = {
-         "Authorization": "Bearer " + response["access_token"],
-         "Content-Type": "application/json",
-      }
-   response = requests.get(url, headers=headers).json()
+#    playlist_id = "3cEYpjA9oz9GiPac4AsH4n"
+#    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+#    headers = {
+#          "Authorization": "Bearer " + response["access_token"],
+#          "Content-Type": "application/json",
+#       }
+#    response = requests.get(url, headers=headers).json()
 
-   tracklist = []
-   # print(response)
-   for i in response["items"]:
-      # print(i["track"]["name"])
-      tracklist.append(i["track"]["name"])
+#    tracklist = []
+#    # print(response)
+#    for i in response["items"]:
+#       # print(i["track"]["name"])
+#       tracklist.append(i["track"]["name"])
 
-   return {"message": tracklist}
+#    return {"message": tracklist}
 
-
+"""
+route: "/"
+description: "Home Page"
+"""
 @app.get("/")
 async def root():
    homeHTML = """
@@ -210,11 +217,18 @@ async def root():
    return HTMLResponse(content=homeHTML, status_code=200)
 
 
+"""
+route: "/help"
+description: "Help Page with links to docs and github repo"
+"""
 @app.get("/help")
 async def root():
     return "Refer to /docs for more geeky info on usage or refer to the README.md on the GitHub Page for simpler information"
 
-
+"""
+route: "/trial"
+description: "Trial Page with basic HTML and JS to convert a Spotify URL to a YouTube URL"
+"""
 @app.get("/trial")
 async def root():
     trialHTML = """
@@ -434,7 +448,7 @@ async def root():
 
          var xhr = new XMLHttpRequest();
          console.log(backendQuery);
-         document.getElementById("outputURL").value = "https://melodysyncer.vercel.app/api/"+backendQuery.substring(2);
+         document.getElementById("outputURL").value = "https://melodysyncer.vercel.app/"+backendQuery.substring(2);
          // console.log(backendQuery);
          xhr.open("GET", backendQuery, false);
          // xhr.onload = function () {
@@ -455,6 +469,14 @@ async def root():
 """
     return HTMLResponse(content=trialHTML, status_code=200)
 
+"""
+@param session: common session to save time and resources
+@param url: url to make request
+@param method: GET or POST
+@param headers: headers to be sent with the request
+@param data: data to be sent with the request
+@description: makes a request to the given url with the given method, headers and data. common method for all to save time and resources
+"""
 
 async def make_request(session, url=None, method="GET", headers=None, data=None):
     #  print("making request", method, url, headers, data)
@@ -476,6 +498,13 @@ async def make_request(session, url=None, method="GET", headers=None, data=None)
                 return None
 
 
+"""
+Uses one of my old APIs to convery ISO Duration to milliseconds
+@param session: common session to save time and resources
+@param videoID: videoID of the YouTube video
+@param youtubeAPIKEY: YouTube API Key
+@description: fetches video duration in ISO Duration and converts to milliseconds
+"""
 async def getTrackDurationYT(session, videoID, youtubeAPIKEY) -> int:
     contentResponse = await make_request(
         session=session,
@@ -535,7 +564,16 @@ async def getTrackDurationYT(session, videoID, youtubeAPIKEY) -> int:
             videoDuration = 0
     return videoDuration
 
-
+"""
+The Big Brains of thie Project!!!
+@param session: common session to save time and resources
+@param songName: name of the song
+@param artistName: name of the artist
+@param albumName: name of the album
+@param songDuration: duration of the song in milliseconds
+@param youtubeAPIKEY: YouTube API Key
+@description: searches for the song on YouTube and returns the most accurate result by utilizing a custom designed algorithm to maximise accuracy and minimise searching credits
+"""
 async def searchTrackYT(
     session,
     songName,
@@ -613,6 +651,11 @@ async def searchTrackYT(
 
         return mostAccurate
 
+"""
+@param session: common session to save time and resources
+@param query: songID on spotify to search for
+@description: fetches song info from spotify
+"""
 async def getSongInfo(session, query):
    print("received song request for " + query)
    token = ""
@@ -650,6 +693,14 @@ async def getSongInfo(session, query):
    else:
          return None, None, None, None
    
+"""
+@param session: common session to save time and resources
+@param song: song object from spotify
+@param youtubeAPIKEY: YouTube API Key
+@param urlMap: map to store the songID and the YouTube URL
+@param response: response object from spotify
+@description: processes the song individually so that i can asynchronously process all the songs in the playlist
+"""
 async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
    curr = searchTrackYT(session=session, songName=song["track"]["name"], artistName=song["track"]["artists"][0]["name"], albumName=song["track"]["album"]["name"], songDuration=song["track"]["duration_ms"], youtubeAPIKEY=youtubeAPIKEY)
    curr_final = await curr
@@ -658,6 +709,10 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
    response["items"]
    urlMap[str(song["track"]["id"])] = "https://www.youtube.com/watch?v="+str(curr_final)
 
+"""
+route: "/song"
+description: "Converts a Spotify Song to a YouTube Song"
+"""
 @app.get("/song")
 async def song(query: str="3b8USdQmDl0wXzrDaHxQYY", youtubeAPIKEY: str="default"):
    if youtubeAPIKEY == "default":
@@ -671,6 +726,10 @@ async def song(query: str="3b8USdQmDl0wXzrDaHxQYY", youtubeAPIKEY: str="default"
       # print(final_song)
       return "https://www.youtube.com/watch?v="+str(final_song)
    
+"""
+route: "/playlist"
+description: "Converts a Spotify Playlist to a YouTube Playlist"
+""" 
 @app.get("/playlist")
 async def playlist(query: str="1YfR61247oUsV44CQg9Irf", youtubeAPIKEY: str="default"):
     if youtubeAPIKEY == "default":
