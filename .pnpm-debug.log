@@ -1,0 +1,14 @@
+{
+  "0 debug pnpm:scope": {
+    "selected": 1
+  },
+  "1 error pnpm": {
+    "code": "ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND",
+    "err": {
+      "name": "pnpm",
+      "message": "No package.json (or package.yaml, or package.json5) was found in \"X:\\deploy-python-fastapi-in-vercel\".",
+      "code": "ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND",
+      "stack": "pnpm: No package.json (or package.yaml, or package.json5) was found in \"X:\\deploy-python-fastapi-in-vercel\".\n    at readProjectManifest (C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:19791:13)\n    at async Object.readProjectManifestOnly (C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:19795:28)\n    at async readProjectManifestOnly (C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:43571:24)\n    at async Object.handler (C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:179522:24)\n    at async C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:183737:21\n    at async run (C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:183711:34)\n    at async runPnpm (C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:183922:5)\n    at async C:\\Users\\hi\\AppData\\Roaming\\npm\\node_modules\\pnpm\\dist\\pnpm.cjs:183914:7"
+    }
+  }
+}
