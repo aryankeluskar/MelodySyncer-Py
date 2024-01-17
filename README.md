@@ -1,5 +1,5 @@
-# Most Accurate Spotify to Youtube API Ever! Presenting MelodySyncer (Beginning Public Operation in December '23)
-Built using Python, FastAPI, hosted on Render.com <br> MelodySyncer, or MeSo for short, is a Simple-to-use **Web API** to convert Spotify songs or playlists to their Youtube equivalent. Most Accurate since I have developed an unique scoring system that minimizes searching credits and maximises accuracy by factoring in Artist Name, Song Length, Album Name, Channel Source, etc. Takes only **4 seconds** per song! (playlist conversion time will be reduced in the future with async function) 
+# MelodySyncer - Most Accurate Spotify to Youtube API Ever!
+Built using Python, FastAPI, hosted on Render.com <br> MelodySyncer, or MeSo for short, is a Simple-to-use **Web API** to convert Spotify songs or playlists to their Youtube equivalent. Most Accurate since I have developed an unique scoring system that minimizes searching credits and maximises accuracy by factoring in Artist Name, Song Length, Album Name, Channel Source, etc. Takes only **0.2 seconds** per song! 
 #### You get: _Skip manual searching, Directly get a List, Peace of Mind_ <br> I get _(hopefully): Star, Heart, Follow :)_
 
 ## Install (Only if local instance needed)
@@ -7,16 +7,17 @@ Built using Python, FastAPI, hosted on Render.com <br> MelodySyncer, or MeSo for
     Run the following commands:
     gh repo clone aryankeluskar/MelodySyncer
     pip install -r requirements.txt
+  Also add the required details in .env
 
 
 ## Run the app (Only if local instance needed)
-    uvicorn main:app --reload
+    uvicorn src.index:app --reload
 Open your broswer at [http://localhost:8000](http://localhost:8000)
 
 ## Usage
-Visit [MelodySyncer.onrender.com](https://MelodySyncer.onrender.com/) to access this API <br>
-Visit [detailed API documentation here](https://MelodySyncer.onrender.com/docs) generated with OpenAPI.json <br>
-Example: http://MelodySyncer.onrender.com/convertPlaylist/?playlistID=1YfR61247oUsV44CQg9Irf responds with [a List of YouTube Links](## "can't reveal links in README for copyright purposes") which can be processed with HttpRequest in Java, or requests.get in Python. This data can be stored in an Array or List for further processing.
+Visit [MelodySyncer.vercel.app](https://melodysyncer.vercel.app/) to access this API <br>
+Visit [detailed API documentation here](https://melodysyncer.vercel.app/docs) generated with OpenAPI.json <br>
+Example: https://MelodySyncer.vercel.app/playlist?query=7fITt66rmO4QIeNs2LPRDj&youtubeAPIKEY=default responds with [a List of YouTube Links](## "can't reveal links in README for copyright purposes") which can be processed with HttpRequest in Java, or requests.get in Python. This data can be stored in an Array or List for further processing.
 
 ### GET /
     Parameters: None 
@@ -24,14 +25,14 @@ Example: http://MelodySyncer.onrender.com/convertPlaylist/?playlistID=1YfR61247o
     
 <hr>
 
-### GET /convertSong
-    Parameters: songID (string) Soptify ID of the Song
+### GET /song
+    Parameters: query (string) ID of the song in Spotify, youtubeAPIKEY (string) Google Cloud API Key with YouTube Data v3 enabled.
     Response: (string) Accurate Youtube ID of the song, neglecting any remix, cover, and music videos
     
 <hr>
 
-### GET /convertPlaylist
-    Parameters: playlistID (string) Soptify ID of the Playlist
+### GET /playlist
+    Parameters: query (string) ID of the song in Spotify, youtubeAPIKEY (string) Google Cloud API Key with YouTube Data v3 enabled.
     Response: (list of str) List / Array of Strings, each element contains the Youtube URL for the song. The indices remain same from Spotify Playlist
     
 ## Support this project!
