@@ -367,7 +367,7 @@ async def root():
 
    <nav>
       <a href="melodysyncer.vercel.app">Home</a>
-      <a href="" target="_blank">Try in Postman (Coming soon)</a>
+      <a href="https://www.postman.com/aryankeluskar/workspace/all-apis-developed-by-aryan-keluskar/api/ef1cb49f-367a-4fad-8f81-6ea101c05057?action=share&creator=31514208" target="_blank">Try in Postman</a>
       <a href="https://github.com/aryankeluskar/MelodySyncer" target="_blank">GitHub Repo</a>
    </nav>
 
