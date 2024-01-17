@@ -715,7 +715,9 @@ route: "/song"
 description: "Converts a Spotify Song to a YouTube Song"
 """
 @app.get("/song")
-async def song(query: str="3b8USdQmDl0wXzrDaHxQYY", youtubeAPIKEY: str="default"):
+async def song(query: str="nope", youtubeAPIKEY: str="default"):
+   if query == "nope":
+      return "Please enter a query and try again"
    if youtubeAPIKEY == "default":
        youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
    async with aiohttp.ClientSession() as session:
@@ -744,7 +746,9 @@ route: "/playlist"
 description: "Converts a Spotify Playlist to a YouTube Playlist"
 """ 
 @app.get("/playlist")
-async def playlist(query: str="1YfR61247oUsV44CQg9Irf", youtubeAPIKEY: str="default"):
+async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
+    if query == "nope":
+      return "Please enter a query and try again"
     if youtubeAPIKEY == "default":
          youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
    #  print(os.getenv("YOUTUBE_API_KEY"))
@@ -773,7 +777,7 @@ async def playlist(query: str="1YfR61247oUsV44CQg9Irf", youtubeAPIKEY: str="defa
       #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
       #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
 
-      playlist_id = "1YfR61247oUsV44CQg9Irf"
+      playlist_id = query
       url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
       headers = {
             "Authorization": "Bearer " + response["access_token"],
