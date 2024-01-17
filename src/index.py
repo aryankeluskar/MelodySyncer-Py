@@ -8,6 +8,7 @@ import os
 from src.dtos.ISayHelloDto import ISayHelloDto
 from dotenv import load_dotenv
 load_dotenv()
+from pymongo import MongoClient
 
 app = FastAPI()
 
@@ -723,6 +724,18 @@ async def song(query: str="3b8USdQmDl0wXzrDaHxQYY", youtubeAPIKEY: str="default"
       print(songName, artistName, albumName, songDuration)
       songID = searchTrackYT(session=session, songName=songName, artistName=artistName, albumName=albumName, songDuration=songDuration, youtubeAPIKEY=youtubeAPIKEY)
       final_song = await songID
+      client = MongoClient(os.getenv("MONGO_URI"))
+    
+      # Select the database and collection
+      db = client[os.getenv("MONGO_DB")]
+      collection = db[os.getenv("MONGO_COLLECTION")]
+
+      collection.update_many({}, {'$inc': 
+                                  {'ISOtotalCalls': 5, 
+                                   'MESOtotalCalls': 1, 
+                                   'MESOsongsConverted': 1}})
+
+      client.close()
       # print(final_song)
       return "https://www.youtube.com/watch?v="+str(final_song)
    
@@ -779,8 +792,21 @@ async def playlist(query: str="1YfR61247oUsV44CQg9Irf", youtubeAPIKEY: str="defa
          tasks.append(task)
 
       await asyncio.gather(*tasks)   
-         
+      client = MongoClient(os.getenv("MONGO_URI"))
+    
+      # Select the database and collection
+      db = client[os.getenv("MONGO_DB")]
+      collection = db[os.getenv("MONGO_COLLECTION")]
+
+      collection.update_many({}, {'$inc': 
+                                  {'ISOtotalCalls': 5*len(response['items']), 
+                                   'MESOtotalCalls': 1, 
+                                   'MESOsongsConverted': len(response['items']), 
+                                   'MESOplaylistsConverted': 1}})
+
+      client.close()
       end = time.time()
       print(f"Time taken: {end-start}")
       print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")      
       return list(urlMap.values())
+    
