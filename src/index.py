@@ -706,7 +706,7 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
    curr = searchTrackYT(session=session, songName=song["track"]["name"], artistName=song["track"]["artists"][0]["name"], albumName=song["track"]["album"]["name"], songDuration=song["track"]["duration_ms"], youtubeAPIKEY=youtubeAPIKEY)
    curr_final = await curr
    curr_final = str(curr_final)
-   print(f"converted {song['track']['name']} and {song['track']['id']} to {curr_final}")
+   # print(f"converted {song['track']['name']} and {song['track']['id']} to {curr_final}")
    response["items"]
    urlMap[str(song["track"]["id"])] = "https://www.youtube.com/watch?v="+str(curr_final)
 
@@ -750,7 +750,7 @@ async def playlist(query: str="1YfR61247oUsV44CQg9Irf", youtubeAPIKEY: str="defa
    #  print(os.getenv("YOUTUBE_API_KEY"))
     async with aiohttp.ClientSession() as session:
       start = time.time()
-      print("did this work")
+      # print("did this work")
       client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
       client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
 
