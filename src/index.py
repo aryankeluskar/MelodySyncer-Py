@@ -610,12 +610,12 @@ async def searchTrackYT(
     response = response.replace("'", '"')
     response = response.replace("None", "null")
     response = response.replace("#", "")
-    with open("response.txt", "w") as file:
-         file.write(response)
+   #  with open("response.txt", "w") as file:
+   #       file.write(response)
     
     data = json.loads(response)
-    with open("response.json", "w") as file:
-         json.dump(data, file)
+   #  with open("response.json", "w") as file:
+   #       json.dump(data, file)
 
     if data:
       #   print(f"Response received as {response}")
