@@ -655,7 +655,7 @@ async def searchTrackYT(
             #  print(str(videoDuration_res))
             videoDuration = int(videoDuration_res)
 
-            if abs(int(videoDuration) - songDuration) <= 2000:
+            if abs(int(videoDuration) - int(songDuration)) <= 2000:
                 currAccuracyScore += 5
 
             # print(item["snippet"]["title"], currAccuracyScore) 
@@ -721,11 +721,12 @@ async def getSongInfo(session, query):
 @description: processes the song individually so that i can asynchronously process all the songs in the playlist
 """
 async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
-   curr = searchTrackYT(session=session, songName=song["track"]["name"], artistName=song["track"]["artists"][0]["name"], albumName=song["track"]["album"]["name"], songDuration=song["track"]["duration_ms"], youtubeAPIKEY=youtubeAPIKEY)
+   curr = searchTrackYT(session=session, songName=str(song["track"]["name"]), artistName=str(song["track"]["artists"][0]["name"]), albumName=str(song["track"]["album"]["name"]), songDuration=int(song["track"]["duration_ms"]), youtubeAPIKEY=str(youtubeAPIKEY))
    curr_final = await curr
    curr_final = str(curr_final)
+   print(curr_final)
    # print(f"converted {song['track']['name']} and {song['track']['id']} to {curr_final}")
-   response["items"]
+   # response["items"]
    urlMap[str(song["track"]["id"])] = "https://www.youtube.com/watch?v="+str(curr_final)
 
 """
