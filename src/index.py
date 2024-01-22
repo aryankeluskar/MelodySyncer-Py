@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from pymongo import MongoClient
 import json
+import re
 
 app = FastAPI()
 
@@ -602,20 +603,30 @@ async def searchTrackYT(
         f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={youtubeAPIKEY}",
     )
    #  print("response received as ", response)
-    if response == "ERROR":
+    if "Error" in str(response):
         return "Check your YouTube API key"
 
-    response = str(response)
-    response = response.replace('"', '')
-    response = response.replace("'", '"')
-    response = response.replace("None", "null")
-    response = response.replace("#", "")
-   #  with open("response.txt", "w") as file:
-   #       file.write(response)
+    try: 
+      data = response
+        
+    except:
+      response = str(response)
+      response = response.replace('"', '')
+      response = response.replace("'", '"')
+      response = response.replace("None", "null")
+      response = response.replace("#", "")
+      # remove every non-alphanumeric character from the value fields in response
+      # response = re.sub(r'(?<=[{,])\s*([^"]+?)\s*:', lambda m: '"{}":'.format(re.sub(r'\W+', '', m.group(1))), response)
     
-    data = json.loads(response)
+      # with open("response.txt", "w") as file:
+      #       file.write(response)
+      
+      data = json.loads(response)
+
+
    #  with open("response.json", "w") as file:
    #       json.dump(data, file)
+
 
     if data:
       #   print(f"Response received as {response}")
@@ -666,8 +677,9 @@ async def searchTrackYT(
 
         if mostAccurate == "":
             mostAccurate = data["items"][0]["id"]["videoId"]
+            macName = data["items"][0]["snippet"]["title"]
         
-        print(f"From Spotify: {songName} to YouTube: {macName}")
+      #   print(f"From Spotify: {songName} to YouTube: {macName}")
         return mostAccurate
 
 """
@@ -724,7 +736,7 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
    curr = searchTrackYT(session=session, songName=str(song["track"]["name"]), artistName=str(song["track"]["artists"][0]["name"]), albumName=str(song["track"]["album"]["name"]), songDuration=int(song["track"]["duration_ms"]), youtubeAPIKEY=str(youtubeAPIKEY))
    curr_final = await curr
    curr_final = str(curr_final)
-   print(curr_final)
+   # print(curr_final)
    # print(f"converted {song['track']['name']} and {song['track']['id']} to {curr_final}")
    # response["items"]
    urlMap[str(song["track"]["id"])] = "https://www.youtube.com/watch?v="+str(curr_final)
