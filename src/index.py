@@ -614,6 +614,7 @@ async def searchTrackYT(
 
         accuracyScore = 0
         mostAccurate = ""
+        macName = ""
         # response_json = await response.json()
         #  mostAccurate = response["items"][0]["id"]["videoId"]
         #  print("searching for " + str(response))
@@ -649,7 +650,9 @@ async def searchTrackYT(
             if currAccuracyScore > accuracyScore:
                 accuracyScore = currAccuracyScore
                 mostAccurate = videoID
-
+                macName = item["snippet"]["title"]
+        
+        print(f"Spotify Song Name is: {songName} and Most Accurate On YouTube is: {macName}")
         return mostAccurate
 
 """
