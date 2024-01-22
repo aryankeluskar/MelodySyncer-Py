@@ -4,3 +4,5 @@ venv
 __pycache__
 .env
 testmongo.py
+sample.json
+response.txt

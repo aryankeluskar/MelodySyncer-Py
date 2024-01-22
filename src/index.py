@@ -9,6 +9,7 @@ from src.dtos.ISayHelloDto import ISayHelloDto
 from dotenv import load_dotenv
 load_dotenv()
 from pymongo import MongoClient
+import json
 
 app = FastAPI()
 
@@ -593,8 +594,8 @@ async def searchTrackYT(
         + "Official Audio"
     )
     #  print(searchQuery)
-    searchQuery = searchQuery.replace(" ", "%20")
-    #  print("searching for " + searchQuery)
+   #  searchQuery = searchQuery.replace(" ", "%20")
+   #  print("searching for " + searchQuery)
 
     response = await make_request(
         session,
@@ -604,9 +605,19 @@ async def searchTrackYT(
     if response == "ERROR":
         return "Check your YouTube API key"
 
-    # print(response)
+    response = str(response)
+    response = response.replace('"', '')
+    response = response.replace("'", '"')
+    response = response.replace("None", "null")
+    response = response.replace("#", "")
+    with open("response.txt", "w") as file:
+         file.write(response)
+    
+    data = json.loads(response)
+    with open("response.json", "w") as file:
+         json.dump(data, file)
 
-    if response:
+    if data:
       #   print(f"Response received as {response}")
         #  with open("response.json", "w") as file:
         #      json.dump(response, file)
@@ -614,11 +625,10 @@ async def searchTrackYT(
 
         accuracyScore = 0
         mostAccurate = ""
-        macName = ""
         # response_json = await response.json()
         #  mostAccurate = response["items"][0]["id"]["videoId"]
         #  print("searching for " + str(response))
-        for item in response["items"]:
+        for item in data["items"]:
             # Firstly, it checks if the title of video has 'Official Audio' in it, to eliminate music videos.
             # Secondly, it checks whether the channel is a music channel by seeing ig channel title has 'Topic'.
             # Example: Natalie Holt - Topic only publishes songs by Natalie Holt, and not any variations unless decided by the artist.
@@ -647,12 +657,14 @@ async def searchTrackYT(
             if abs(int(videoDuration) - songDuration) <= 2000:
                 currAccuracyScore += 5
 
+            # print(item["snippet"]["title"], currAccuracyScore) 
             if currAccuracyScore > accuracyScore:
                 accuracyScore = currAccuracyScore
                 mostAccurate = videoID
-                macName = item["snippet"]["title"]
-        
-        print(f"Spotify Song Name is: {songName} and Most Accurate On YouTube is: {macName}")
+
+        if mostAccurate == "":
+            mostAccurate = data["items"][0]["id"]["videoId"]
+
         return mostAccurate
 
 """
@@ -726,7 +738,7 @@ async def song(query: str="nope", youtubeAPIKEY: str="default"):
    async with aiohttp.ClientSession() as session:
       # print("did this work")
       songName, artistName, albumName, songDuration = await getSongInfo(session=session, query=query)
-      print(songName, artistName, albumName, songDuration)
+      # print(songName, artistName, albumName, songDuration)
       songID = searchTrackYT(session=session, songName=songName, artistName=artistName, albumName=albumName, songDuration=songDuration, youtubeAPIKEY=youtubeAPIKEY)
       final_song = await songID
       client = MongoClient(os.getenv("MONGO_URI"))
