@@ -817,14 +817,19 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
       response = requests.get(url, headers=headers).json()
 
       urlMap = defaultdict()
-
+      c=1
       for key in response['items']:
-          urlMap[key['track']['id']] = None
+         # print(c, key['track']['name'], len(key['track']['name']))
+         c+=1
+         # if key['track']['id'] contains alphanumeric characters
+         if len(key['track']['name']) > 0:
+            urlMap[key['track']['id']] = None
 
       tasks = []
       for song in response["items"]:
-         task = asyncio.ensure_future(process_indi_song(session=session, song=song, youtubeAPIKEY=youtubeAPIKEY, urlMap=urlMap, response=response))
-         tasks.append(task)
+         if len(key['track']['name']) > 0:
+            task = asyncio.ensure_future(process_indi_song(session=session, song=song, youtubeAPIKEY=youtubeAPIKEY, urlMap=urlMap, response=response))
+            tasks.append(task)
 
       await asyncio.gather(*tasks)   
       client = MongoClient(os.getenv("MONGO_URI"))
