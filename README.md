@@ -1,4 +1,4 @@
-# MelodySyncer - Most Accurate Spotify to Youtube API Ever!
+# MelodySyncer - Most Accurate (and Fastest) Spotify to Youtube API Ever!
 Built using Python, FastAPI, hosted on Render.com <br> MelodySyncer, or MeSo for short, is a Simple-to-use **Web API** to convert Spotify songs or playlists to their Youtube equivalent. Most Accurate since I have developed an unique scoring system that minimizes searching credits and maximises accuracy by factoring in Artist Name, Song Length, Album Name, Channel Source, etc. Takes only **0.2 seconds** per song! 
 #### You get: _Skip manual searching, Directly get a List, Peace of Mind_ <br> I get _(hopefully): Star, Heart, Follow :)_
 
