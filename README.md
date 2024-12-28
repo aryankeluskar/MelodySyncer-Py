@@ -3,7 +3,7 @@ Built using Python, FastAPI, hosted on Render.com <br> MelodySyncer, or MeSo for
 #### You get: _Skip manual searching, Directly get a List, Peace of Mind_ <br> I get _(hopefully): Star, Heart, Follow :)_
 
 ## Install (Only if local instance needed)
-    Requirements: gh, pip, python 3.12+
+    Requirements: gh, pip, python <= 3.8
     Run the following commands:
     gh repo clone aryankeluskar/MelodySyncer
     pip install -r requirements.txt
