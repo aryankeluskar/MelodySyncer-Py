@@ -426,6 +426,9 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
 
       response = requests.post(url, headers=headers, data=data).json()
 
+      print(response)
+      
+
       # curl --request GET \
       #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
       #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'

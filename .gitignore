@@ -6,3 +6,4 @@ __pycache__
 testmongo.py
 sample.json
 response.txt
+.env*.local
