@@ -15,9 +15,9 @@ Built using Python, FastAPI, hosted on Render.com <br> MelodySyncer, or MeSo for
 Open your broswer at [http://localhost:8000](http://localhost:8000)
 
 ## Usage
-Visit [MelodySyncer.vercel.app](https://melodysyncer.vercel.app/) to access this API <br>
-Visit [detailed API documentation here](https://melodysyncer.vercel.app/docs) generated with OpenAPI.json <br>
-Example: https://MelodySyncer.vercel.app/playlist?query=7fITt66rmO4QIeNs2LPRDj&youtubeAPIKEY=default responds with [a List of YouTube Links](## "can't reveal links in README for copyright purposes") which can be processed with HttpRequest in Java, or requests.get in Python. This data can be stored in an Array or List for further processing.
+Visit [dub.sh/melodysyncer](https://dub.sh/melodysyncer) to access this API. Check out detailed API documentation [here](https://melodysyncer.aryankeluskar.com/docs) generated with OpenAPI <br>
+
+**Example**: `https://melodysyncer.aryankeluskar.com/playlist?query=7fITt66rmO4QIeNs2LPRDj&youtubeAPIKEY=default` responds with [a list of YouTube Links](## "can't reveal links in README for copyright purposes") which can be processed with HttpRequest in Java, or requests.get in Python. This data can be stored in an Array or List for further processing.
 
 ### GET /
     Parameters: None 
