@@ -212,7 +212,7 @@
                     if (query.includes("?si")) {
                         query = query.substring(0, query.indexOf("?si"));
                     }
-                    backendQuery = "./playlist?query=" + query + "&youtubeAPIKEY=default&give_length=yes";
+                    backendQuery = "./playlist?query=" + query + "&youtubeAPIKEY=defaul";
                 }
                 else {
                     let query = inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9);
@@ -220,7 +220,6 @@
                         query = query.substring(0, query.indexOf("?si"));
                     }
                     backendQuery = "./playlist?query=" + query + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
-                    backendQuery += "&give_length=yes";
                 }
             }
 
@@ -229,6 +228,8 @@
             console.log(backendQuery);
             document.getElementById("outputURL").value = "https://melodysyncer.aryankeluskar.com/" + backendQuery.substring(2);
             // console.log(backendQuery);
+
+            backendQuery += "&give_length=yes";
             xhr.open("GET", backendQuery, false);
             // xhr.onload = function () {
             //    // Hide the progress bar after receiving the response
