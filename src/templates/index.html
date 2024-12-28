@@ -212,14 +212,15 @@
                     if (query.includes("?si")) {
                         query = query.substring(0, query.indexOf("?si"));
                     }
-                    backendQuery = "./playlist_frontend?query=" + query + "&youtubeAPIKEY=default";
+                    backendQuery = "./playlist?query=" + query + "&youtubeAPIKEY=default&give_length=yes";
                 }
                 else {
                     let query = inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9);
                     if (query.includes("?si")) {
                         query = query.substring(0, query.indexOf("?si"));
                     }
-                    backendQuery = "./playlist_frontend?query=" + query + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
+                    backendQuery = "./playlist?query=" + query + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
+                    backendQuery += "&give_length=yes";
                 }
             }
 
@@ -236,23 +237,21 @@
             xhr.send();
 
             final_response = JSON.parse( xhr.responseText );
-            length = parseInt(final_response["length"]);
-
+            
             console.log(final_response);
-
-            document.getElementById("outputArea").value = final_response["list"];
-
+            document.getElementById("outputArea").value = final_response
+            
             // stop the stopwatch
             var endTime = new Date().getTime();
-
+            
             // calculate the time taken
             var timeTaken = endTime - startTime;
             document.getElementById("timeTaken").value = "Time Taken: " + timeTaken/1000 + "s";
-
+            
             if (inputQuery.value.includes("playlist")) {
-
+                length = parseInt(final_response["length"]);
+                document.getElementById("outputArea").value = final_response["list"];
                 document.getElementById("timeTaken").value = "Time Taken: " + timeTaken/1000 + " seconds" + "\nTime taken per song: "+ timeTaken/1000/length +" seconds";
-
             }
         } else {
             alert("Invalid URL")

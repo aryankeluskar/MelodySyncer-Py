@@ -113,14 +113,14 @@ async def make_request(session, url=None, method="GET", headers=None, data=None)
                 return await response.json()
             else:
                 print(f"Error: {response.status}")
-                return None
+                return f"Error: {response.status}"
     elif method == "POST":
         async with session.post(url, headers=headers, data=data) as response:
             if response.status == 200:
                 return await response.json()
             else:
                 print(f"Error: {response.status}")
-                return None
+                return f"Error: {response.status}"
 
 
 """
@@ -138,55 +138,85 @@ async def getTrackDurationYT(session, videoID, youtubeAPIKEY) -> int:
 
    #  print(contentResponse)
 
-    if contentResponse:
-        ISODuration = contentResponse["items"][0]["contentDetails"]["duration"]
-        if "H" in ISODuration and "M" in ISODuration and "S" in ISODuration:
-            videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
-                * 3600000
-                + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("M")])
-                * 60000
-                + int(ISODuration[ISODuration.find("M") + 1 : ISODuration.find("S")])
-                * 1000
+    if "Error" in str(contentResponse):
+        print("Check your YouTube API key. Using alternate key")
+
+        if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
+            contentResponse = await make_request(
+                session=session,
+                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY2')}&id={videoID}",
             )
-        elif "H" in ISODuration and "M" in ISODuration:
-            videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
-                * 3600000
-                + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("M")])
-                * 60000
+        
+        elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
+            contentResponse = await make_request(
+                session=session,
+                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY3')}&id={videoID}",
             )
-        elif "H" in ISODuration and "S" in ISODuration:
-            videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
-                * 3600000
-                + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("S")])
-                * 1000
+
+        elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY3")):
+            contentResponse = await make_request(
+                session=session,
+                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY4')}&id={videoID}",
             )
-        elif "M" in ISODuration and "S" in ISODuration:
-            videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("M")])
-                * 60000
-                + int(ISODuration[ISODuration.find("M") + 1 : ISODuration.find("S")])
-                * 1000
+
+        elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY4")):
+            contentResponse = await make_request(
+                session=session,
+                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY5')}&id={videoID}",
             )
-        elif "H" in ISODuration:
-            videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
-                * 3600000
-            )
-        elif "M" in ISODuration:
-            videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("M")])
-                * 60000
-            )
-        elif "S" in ISODuration:
-            videoDuration = (
-                int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("S")])
-                * 1000
-            )
+        
         else:
-            videoDuration = 0
+            return -99
+
+    ISODuration = contentResponse["items"][0]["contentDetails"]["duration"]
+    if "H" in ISODuration and "M" in ISODuration and "S" in ISODuration:
+        videoDuration = (
+            int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+            * 3600000
+            + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("M")])
+            * 60000
+            + int(ISODuration[ISODuration.find("M") + 1 : ISODuration.find("S")])
+            * 1000
+        )
+    elif "H" in ISODuration and "M" in ISODuration:
+        videoDuration = (
+            int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+            * 3600000
+            + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("M")])
+            * 60000
+        )
+    elif "H" in ISODuration and "S" in ISODuration:
+        videoDuration = (
+            int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+            * 3600000
+            + int(ISODuration[ISODuration.find("H") + 1 : ISODuration.find("S")])
+            * 1000
+        )
+    elif "M" in ISODuration and "S" in ISODuration:
+        videoDuration = (
+            int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("M")])
+            * 60000
+            + int(ISODuration[ISODuration.find("M") + 1 : ISODuration.find("S")])
+            * 1000
+        )
+    elif "H" in ISODuration:
+        videoDuration = (
+            int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("H")])
+            * 3600000
+        )
+    elif "M" in ISODuration:
+        videoDuration = (
+            int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("M")])
+            * 60000
+        )
+    elif "S" in ISODuration:
+        videoDuration = (
+            int(ISODuration[ISODuration.find("T") + 1 : ISODuration.find("S")])
+            * 1000
+        )
+    else:
+        videoDuration = 0
+
     return videoDuration
 
 """
@@ -226,7 +256,34 @@ async def searchTrackYT(
     )
    #  print("response received as ", response)
     if "Error" in str(response):
-        return "Check your YouTube API key"
+        print("Check your YouTube API key. Using alternate key")
+
+        if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
+            response = await make_request(
+                session,
+                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY2")}",
+            )
+        
+        elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
+            response = await make_request(
+                session,
+                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY3")}",
+            )
+
+        elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY3")):
+            response = await make_request(
+                session,
+                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY4")}",
+            )
+
+        elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY4")):
+            response = await make_request(
+                session,
+                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY5")}",
+            )
+        
+        else:
+            return "API Limit Exceeded for all YouTube API Keys"
 
     try: 
       data = response
@@ -287,6 +344,9 @@ async def searchTrackYT(
             videoDuration_res = await videoDuration_coroutine
             #  print(str(videoDuration_res))
             videoDuration = int(videoDuration_res)
+
+            if videoDuration == -99:
+                return "API Limit Exceeded"
 
             if abs(int(videoDuration) - int(songDuration)) <= 2000:
                 currAccuracyScore += 5
@@ -358,6 +418,10 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
    curr = searchTrackYT(session=session, songName=str(song["track"]["name"]), artistName=str(song["track"]["artists"][0]["name"]), albumName=str(song["track"]["album"]["name"]), songDuration=int(song["track"]["duration_ms"]), youtubeAPIKEY=str(youtubeAPIKEY))
    curr_final = await curr
    curr_final = str(curr_final)
+
+   if curr_final == "API Limit Exceeded":
+       urlMap[str(song["track"]["id"])] = "API Limit Exceeded"
+
    # print(curr_final)
    # print(f"converted {song['track']['name']} and {song['track']['id']} to {curr_final}")
    # response["items"]
@@ -371,14 +435,19 @@ description: "Converts a Spotify Song to a YouTube Song"
 async def song(query: str="nope", youtubeAPIKEY: str="default"):
    if query == "nope":
       return "Please enter a query and try again"
+   
    if youtubeAPIKEY == "default":
        youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
+   
    async with aiohttp.ClientSession() as session:
       # print("did this work")
       songName, artistName, albumName, songDuration = await getSongInfo(session=session, query=query)
-      # print(songName, artistName, albumName, songDuration)
+    #   print(songName, artistName, albumName, songDuration)
+      
       songID = searchTrackYT(session=session, songName=songName, artistName=artistName, albumName=albumName, songDuration=songDuration, youtubeAPIKEY=youtubeAPIKEY)
       final_song = await songID
+    #   print(final_song)
+      
       client = MongoClient(os.getenv("MONGO_URI"))
     
       # Select the database and collection
@@ -391,7 +460,6 @@ async def song(query: str="nope", youtubeAPIKEY: str="default"):
                                    'MESOsongsConverted': 1}})
 
       client.close()
-      # print(final_song)
       return "https://www.youtube.com/watch?v="+str(final_song)
    
 """
@@ -399,12 +467,13 @@ route: "/playlist"
 description: "Converts a Spotify Playlist to a YouTube Playlist"
 """ 
 @app.get("/playlist")
-async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
+async def playlist(query: str="nope", youtubeAPIKEY: str="default", give_length: str="no"):
     if query == "nope":
       return "Please enter a query and try again"
+
     if youtubeAPIKEY == "default":
          youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
-   #  print(os.getenv("YOUTUBE_API_KEY"))
+
     async with aiohttp.ClientSession() as session:
       start = time.time()
       # print("did this work")
@@ -474,102 +543,31 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
     #   for data in all_data:
     #      print(data)
 
+      for i in urlMap:
+        if urlMap[i] == "API Limit Exceeded" and youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
+            return playlist(query=query, youtubeAPIKEY=str(os.getenv("YOUTUBE_API_KEY2")) , give_length=give_length)
+        
+        if urlMap[i] == "API Limit Exceeded" and youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
+            return playlist(query=query, youtubeAPIKEY=str(os.getenv("YOUTUBE_API_KEY3")) , give_length=give_length)
+        
+        if urlMap[i] == "API Limit Exceeded" and youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
+            return playlist(query=query, youtubeAPIKEY=str(os.getenv("YOUTUBE_API_KEY3")) , give_length=give_length)
+        
+        else:
+            for i in urlMap:
+                if urlMap[i] == "API Limit Exceeded":
+                    urlMap[i] = "API Limit Exceeded. Please check your YouTube API Key"
+
       client.close()
       end = time.time()
       print(f"Time taken: {end-start}")
       print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")      
+
+      if give_length == "yes":
+          return {
+            "list": list(urlMap.values()),
+            "length": int(len(response['items']))
+          }
+
+      
       return list(urlMap.values())
-    
-
-  
-"""
-route: "/playlist_frontend"
-description: "Converts a Spotify Playlist to a YouTube Playlist for the frontend specifically"
-""" 
-@app.get("/playlist_frontend")
-async def playlist_frontend(query: str="nope", youtubeAPIKEY: str="default"):
-
-    if query == "nope":
-      return "Please enter a query and try again"
-    if youtubeAPIKEY == "default":
-         youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
-   #  print(os.getenv("YOUTUBE_API_KEY"))
-    async with aiohttp.ClientSession() as session:
-      start = time.time()
-      # print("did this work")
-      client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
-      client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
-
-      url = "https://accounts.spotify.com/api/token"
-      headers = {
-         "Authorization": "Basic "
-         + base64.b64encode(
-            (
-                  str(os.getenv("SPOTIPY_CLIENT_ID"))
-                  + ":"
-                  + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
-            ).encode()
-         ).decode()
-      }
-      data = {"grant_type": "client_credentials"}
-
-      response = requests.post(url, headers=headers, data=data).json()
-
-      print(response)
-
-
-      # curl --request GET \
-      #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
-      #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
-
-      playlist_id = query
-      url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-      headers = {
-            "Authorization": "Bearer " + response["access_token"],
-            "Content-Type": "application/json",
-         }
-      response = requests.get(url, headers=headers).json()
-
-      urlMap = defaultdict()
-      c=1
-      for key in response['items']:
-         # print(c, key['track']['name'], len(key['track']['name']))
-         c+=1
-         # if key['track']['id'] contains alphanumeric characters
-         if len(key['track']['name']) > 0:
-            urlMap[key['track']['id']] = None
-
-      tasks = []
-      for song in response["items"]:
-         if len(key['track']['name']) > 0:
-            task = asyncio.ensure_future(process_indi_song(session=session, song=song, youtubeAPIKEY=youtubeAPIKEY, urlMap=urlMap, response=response))
-            tasks.append(task)
-
-      await asyncio.gather(*tasks)   
-      client = MongoClient(os.getenv("MONGO_URI"))
-    
-      # Select the database and collection
-      db = client[os.getenv("MONGO_DB")]
-      collection = db[os.getenv("MONGO_COLLECTION")]
-
-      collection.update_many({}, {'$inc': 
-                                  {'ISOtotalCalls': 5*len(response['items']), 
-                                   'MESOtotalCalls': 1, 
-                                   'MESOsongsConverted': len(response['items']), 
-                                   'MESOplaylistsConverted': 1}})
-      
-    #   all_data = collection.find({})
-    #   print("Data from the Database")
-    #   for data in all_data:
-    #      print(data)
-
-      client.close()
-      end = time.time()
-      print(f"Time taken: {end-start}")
-      print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")      
-      return {
-          "list": list(urlMap.values()),
-          "length": int(len(response['items']))
-        }
-    
-
