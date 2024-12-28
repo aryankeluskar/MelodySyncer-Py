@@ -579,3 +579,20 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default", give_length:
 
       
       return list(urlMap.values())
+    
+@app.get("/analytics")
+async def analytics():
+    client = MongoClient(os.getenv("MONGO_URI"))
+    
+    # Select the database and collection
+    db = client[os.getenv("MONGO_DB")]
+    collection = db[os.getenv("MONGO_COLLECTION")]
+    
+    all_data = collection.find({})
+    print("Data from the Database")
+    for data in all_data:
+        print(data)
+        return str(data)
+    
+    client.close()
+    return "No data found"
