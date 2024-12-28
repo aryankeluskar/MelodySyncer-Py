@@ -427,7 +427,7 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
       response = requests.post(url, headers=headers, data=data).json()
 
       print(response)
-      
+
 
       # curl --request GET \
       #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
@@ -468,6 +468,11 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
                                    'MESOtotalCalls': 1, 
                                    'MESOsongsConverted': len(response['items']), 
                                    'MESOplaylistsConverted': 1}})
+      
+    #   all_data = collection.find({})
+    #   print("Data from the Database")
+    #   for data in all_data:
+    #      print(data)
 
       client.close()
       end = time.time()
@@ -475,3 +480,96 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default"):
       print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")      
       return list(urlMap.values())
     
+
+  
+"""
+route: "/playlist_frontend"
+description: "Converts a Spotify Playlist to a YouTube Playlist for the frontend specifically"
+""" 
+@app.get("/playlist_frontend")
+async def playlist_frontend(query: str="nope", youtubeAPIKEY: str="default"):
+
+    if query == "nope":
+      return "Please enter a query and try again"
+    if youtubeAPIKEY == "default":
+         youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
+   #  print(os.getenv("YOUTUBE_API_KEY"))
+    async with aiohttp.ClientSession() as session:
+      start = time.time()
+      # print("did this work")
+      client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
+      client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+
+      url = "https://accounts.spotify.com/api/token"
+      headers = {
+         "Authorization": "Basic "
+         + base64.b64encode(
+            (
+                  str(os.getenv("SPOTIPY_CLIENT_ID"))
+                  + ":"
+                  + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+            ).encode()
+         ).decode()
+      }
+      data = {"grant_type": "client_credentials"}
+
+      response = requests.post(url, headers=headers, data=data).json()
+
+      print(response)
+
+
+      # curl --request GET \
+      #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
+      #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
+
+      playlist_id = query
+      url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+      headers = {
+            "Authorization": "Bearer " + response["access_token"],
+            "Content-Type": "application/json",
+         }
+      response = requests.get(url, headers=headers).json()
+
+      urlMap = defaultdict()
+      c=1
+      for key in response['items']:
+         # print(c, key['track']['name'], len(key['track']['name']))
+         c+=1
+         # if key['track']['id'] contains alphanumeric characters
+         if len(key['track']['name']) > 0:
+            urlMap[key['track']['id']] = None
+
+      tasks = []
+      for song in response["items"]:
+         if len(key['track']['name']) > 0:
+            task = asyncio.ensure_future(process_indi_song(session=session, song=song, youtubeAPIKEY=youtubeAPIKEY, urlMap=urlMap, response=response))
+            tasks.append(task)
+
+      await asyncio.gather(*tasks)   
+      client = MongoClient(os.getenv("MONGO_URI"))
+    
+      # Select the database and collection
+      db = client[os.getenv("MONGO_DB")]
+      collection = db[os.getenv("MONGO_COLLECTION")]
+
+      collection.update_many({}, {'$inc': 
+                                  {'ISOtotalCalls': 5*len(response['items']), 
+                                   'MESOtotalCalls': 1, 
+                                   'MESOsongsConverted': len(response['items']), 
+                                   'MESOplaylistsConverted': 1}})
+      
+    #   all_data = collection.find({})
+    #   print("Data from the Database")
+    #   for data in all_data:
+    #      print(data)
+
+      client.close()
+      end = time.time()
+      print(f"Time taken: {end-start}")
+      print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")      
+      return {
+          "list": list(urlMap.values()),
+          "length": int(len(response['items']))
+        }
+    
+
