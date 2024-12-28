@@ -258,7 +258,7 @@ async def searchTrackYT(
         f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={youtubeAPIKEY}",
     )
    #  print("response received as ", response)
-    if "Error" in str(response):
+    while "Error" in str(response):
         print("Check your YouTube API key. Using alternate key")
         fixable = False
 
