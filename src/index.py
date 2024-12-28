@@ -138,35 +138,38 @@ async def getTrackDurationYT(session, videoID, youtubeAPIKEY) -> int:
 
    #  print(contentResponse)
 
-    if "Error" in str(contentResponse):
+    while "Error" in str(contentResponse):
         print("Check your YouTube API key. Using alternate key")
+        fixable = False
 
         if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
-            contentResponse = await make_request(
-                session=session,
-                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY2')}&id={videoID}",
-            )
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY2"))
+            fixable = True
         
         elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
-            contentResponse = await make_request(
-                session=session,
-                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY3')}&id={videoID}",
-            )
-
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY3"))
+            fixable = True
+            
         elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY3")):
-            contentResponse = await make_request(
-                session=session,
-                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY4')}&id={videoID}",
-            )
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY4"))
+            fixable = True
 
         elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY4")):
-            contentResponse = await make_request(
-                session=session,
-                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={os.getenv('YOUTUBE_API_KEY5')}&id={videoID}",
-            )
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY5"))
+            fixable = True
         
         else:
             return -99
+        
+        if fixable:
+            contentResponse = await make_request(
+                session=session,
+                url=f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&key={youtubeAPIKEY}&id={videoID}",
+            )
+
+        else:
+            return -99
+        
 
     ISODuration = contentResponse["items"][0]["contentDetails"]["duration"]
     if "H" in ISODuration and "M" in ISODuration and "S" in ISODuration:
@@ -257,33 +260,38 @@ async def searchTrackYT(
    #  print("response received as ", response)
     if "Error" in str(response):
         print("Check your YouTube API key. Using alternate key")
+        fixable = False
 
         if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
-            response = await make_request(
-                session,
-                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY2")}",
-            )
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY2"))
+            fixable = True
         
         elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
-            response = await make_request(
-                session,
-                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY3")}",
-            )
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY3"))
+            fixable = True
 
         elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY3")):
-            response = await make_request(
-                session,
-                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY4")}",
-            )
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY4"))
+            fixable = True
+
 
         elif youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY4")):
-            response = await make_request(
-                session,
-                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={os.getenv("YOUTUBE_API_KEY5")}",
-            )
-        
+            youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY5"))
+            fixable = True
+
         else:
             return "API Limit Exceeded for all YouTube API Keys"
+
+        if fixable:
+            response = await make_request(
+                session,
+                f"https://youtube.googleapis.com/youtube/v3/search?part=snippet&q={searchQuery}&type=video&key={youtubeAPIKEY}",
+            )
+
+        else:
+            return "API Limit Exceeded for all YouTube API Keys"
+
+        
 
     try: 
       data = response
