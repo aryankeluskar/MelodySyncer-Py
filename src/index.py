@@ -591,8 +591,9 @@ async def analytics():
     all_data = collection.find({})
     print("Data from the Database")
     for data in all_data:
+        data.pop("_id")
         print(data)
-        return str(data)
+        return data
     
     client.close()
     return "No data found"
