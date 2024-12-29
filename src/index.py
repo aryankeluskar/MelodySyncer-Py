@@ -324,7 +324,7 @@ async def searchTrackYT(
 
 
     if data:
-      #   print(f"Response received as {response}")
+        # print(f"Response received as {data["items"]}")
         #  with open("response.json", "w") as file:
         #      json.dump(response, file)
         #  print((response["items"][0]["id"]["videoId"]))
@@ -374,6 +374,11 @@ async def searchTrackYT(
                 macName = item["snippet"]["title"]
 
         if mostAccurate == "":
+            # print(data)
+            if data["pageInfo"]["totalResults"] == 0:
+                print("No accurate result found")
+                return "dQw4w9WgXcQ"
+
             mostAccurate = data["items"][0]["id"]["videoId"]
             macName = data["items"][0]["snippet"]["title"]
         
@@ -525,6 +530,8 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default", give_length:
             "Content-Type": "application/json",
          }
       response = requests.get(url, headers=headers).json()
+
+    #   print(response)
 
       urlMap = defaultdict()
       c=1
