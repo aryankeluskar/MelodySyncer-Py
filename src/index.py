@@ -142,6 +142,10 @@ async def getTrackDurationYT(session, videoID, youtubeAPIKEY) -> int:
         print("Check your YouTube API key. Using alternate key")
         fixable = False
 
+        if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY5")):
+            print("API Limit Exceeded for every YouTube API Key")
+            return -99
+
         if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
             youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY2"))
             fixable = True
@@ -262,6 +266,10 @@ async def searchTrackYT(
         print("Check your YouTube API key. Using alternate key")
         fixable = False
 
+        if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY5")):
+            print("API Limit Exceeded for all YouTube API Keys")
+            return "API Limit Exceeded for all YouTube API Keys"
+
         if youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
             youtubeAPIKEY = str(os.getenv("YOUTUBE_API_KEY2"))
             fixable = True
@@ -354,7 +362,7 @@ async def searchTrackYT(
             videoDuration = int(videoDuration_res)
 
             if videoDuration == -99:
-                return "API Limit Exceeded"
+                return "API Limit Exceeded for all YouTube API Keys"
 
             if abs(int(videoDuration) - int(songDuration)) <= 2000:
                 currAccuracyScore += 5
@@ -427,9 +435,6 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
    curr_final = await curr
    curr_final = str(curr_final)
 
-   if curr_final == "API Limit Exceeded":
-       urlMap[str(song["track"]["id"])] = "API Limit Exceeded"
-
    # print(curr_final)
    # print(f"converted {song['track']['name']} and {song['track']['id']} to {curr_final}")
    # response["items"]
@@ -455,6 +460,9 @@ async def song(query: str="nope", youtubeAPIKEY: str="default"):
       songID = searchTrackYT(session=session, songName=songName, artistName=artistName, albumName=albumName, songDuration=songDuration, youtubeAPIKEY=youtubeAPIKEY)
       final_song = await songID
     #   print(final_song)
+
+      if final_song == "API Limit Exceeded for all YouTube API Keys":
+        return "API Limit Exceeded for all YouTube API Keys"
       
       client = MongoClient(os.getenv("MONGO_URI"))
     
@@ -551,25 +559,20 @@ async def playlist(query: str="nope", youtubeAPIKEY: str="default", give_length:
     #   for data in all_data:
     #      print(data)
 
-      for i in urlMap:
-        if urlMap[i] == "API Limit Exceeded" and youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY")):
-            return playlist(query=query, youtubeAPIKEY=str(os.getenv("YOUTUBE_API_KEY2")) , give_length=give_length)
-        
-        if urlMap[i] == "API Limit Exceeded" and youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
-            return playlist(query=query, youtubeAPIKEY=str(os.getenv("YOUTUBE_API_KEY3")) , give_length=give_length)
-        
-        if urlMap[i] == "API Limit Exceeded" and youtubeAPIKEY == str(os.getenv("YOUTUBE_API_KEY2")):
-            return playlist(query=query, youtubeAPIKEY=str(os.getenv("YOUTUBE_API_KEY3")) , give_length=give_length)
-        
-        else:
-            for i in urlMap:
-                if urlMap[i] == "API Limit Exceeded":
-                    urlMap[i] = "API Limit Exceeded. Please check your YouTube API Key"
-
       client.close()
       end = time.time()
       print(f"Time taken: {end-start}")
       print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")      
+
+      for i in urlMap:
+          if "API Limit Exceeded for all YouTube API" in urlMap[i]:
+              if give_length == "no":
+                return "API Limit Exceeded for all YouTube API Keys"
+              
+              return {
+                "list": "API Limit Exceeded for all YouTube API Keys",
+                "length": int(len(response['items']))
+              }
 
       if give_length == "yes":
           return {

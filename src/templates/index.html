@@ -91,7 +91,8 @@
             box-sizing: border-box;
         }
 
-        #outputURL, #timeTaken {
+        #outputURL,
+        #timeTaken {
             height: 50px;
             margin-bottom: 10px;
         }
@@ -150,7 +151,7 @@
                 <!-- <label class="label">Description:</label> -->
                 <p>The URL should be of a track or a playlist (can be verified by checking if the url
                     contains "track" or "playlist") </p>
-                <button onclick="convert(document.getElementById('inputQuery'))" class="button">Convert!</button>
+                <button onclick="convert()" id="convertButton" class="button">Convert!</button>
                 <!-- <div class="progress-container">
                <div class="progress-bar" id="progressBar"></div>
             </div> -->
@@ -174,16 +175,26 @@
 </body>
 
 <script>
-    function convert(inputQuery) {
+    function convert() {
+        // const buttonElement = document.getElementsByClassName('button')[0];
+        // console.log(document.getElementById("convertButton").innerHTML);
+
+        // disable the button
+        // buttonElement.disabled = true;
+        // buttonElement.style.opacity = 0.5;
+        // buttonElement.innerHTML = "Converting...";
+
+        performAPICall();
+
+    }
+
+    function performAPICall() {
+        const inputQuery = document.getElementById('inputQuery');
         // start a stopwatch
-        var startTime = new Date().getTime(); 
+        var startTime = new Date().getTime();
 
         currURL = window.location.href;
         console.log(currURL);
-        // var progressBar = document.getElementById("progressBar");
-        // var progressContainer = document.querySelector(".progress-container");
-        // progressContainer.style.display = "block";
-
 
         if (inputQuery.value.includes("open.spotify.com")) {
             if (inputQuery.value.includes("track")) {
@@ -237,22 +248,22 @@
             // };
             xhr.send();
 
-            final_response = JSON.parse( xhr.responseText );
-            
+            final_response = JSON.parse(xhr.responseText);
+
             console.log(final_response);
             document.getElementById("outputArea").value = final_response
-            
+
             // stop the stopwatch
             var endTime = new Date().getTime();
-            
+
             // calculate the time taken
             var timeTaken = endTime - startTime;
-            document.getElementById("timeTaken").value = "Time Taken: " + timeTaken/1000 + "s";
-            
+            document.getElementById("timeTaken").value = "Time Taken: " + timeTaken / 1000 + "s";
+
             if (inputQuery.value.includes("playlist")) {
                 length = parseInt(final_response["length"]);
                 document.getElementById("outputArea").value = final_response["list"];
-                document.getElementById("timeTaken").value = "Time Taken: " + timeTaken/1000 + " seconds" + "\nTime taken per song: "+ timeTaken/1000/length +" seconds";
+                document.getElementById("timeTaken").value = "Time Taken: " + timeTaken / 1000 + " seconds" + "\nTime taken per song: " + timeTaken / 1000 / length + " seconds";
             }
         } else {
             alert("Invalid URL")
