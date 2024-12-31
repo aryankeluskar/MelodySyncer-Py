@@ -82,7 +82,7 @@ description: "Home Page"
 """
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def root():
     return FileResponse(templates_dir + "/index.html")
 
@@ -300,41 +300,27 @@ async def searchTrackYT(
         data = response
 
     except:
+        # remove every non-alphanumeric character from the value fields in response
         response = str(response)
         response = response.replace('"', "")
         response = response.replace("'", '"')
         response = response.replace("None", "null")
         response = response.replace("#", "")
-        # remove every non-alphanumeric character from the value fields in response
-        # response = re.sub(r'(?<=[{,])\s*([^"]+?)\s*:', lambda m: '"{}":'.format(re.sub(r'\W+', '', m.group(1))), response)
-
-        # with open("response.txt", "w") as file:
-        #       file.write(response)
-
+        
         data = json.loads(response)
 
-    #  with open("response.json", "w") as file:
-    #       json.dump(data, file)
-
     if data:
-        # print(f"Response received as {data["items"]}")
-        #  with open("response.json", "w") as file:
-        #      json.dump(response, file)
-        #  print((response["items"][0]["id"]["videoId"]))
-
         accuracyScore = 0
         mostAccurate = ""
         macName = ""
-        # response_json = await response.json()
-        #  mostAccurate = response["items"][0]["id"]["videoId"]
-        #  print("searching for " + str(response))
+
         for item in data["items"]:
-            # Firstly, it checks if the title of video has 'Official Audio' in it, to eliminate music videos.
-            # Secondly, it checks whether the channel is a music channel by seeing ig channel title has 'Topic'.
-            # Example: Natalie Holt - Topic only publishes songs by Natalie Holt, and not any variations unless decided by the artist.
-            # Thirdly, it verifies the song duration by equating it to the original song duration to eliminate possibilities of a different version (margin of error = 2s)
-            # Returns the one which has the highest accuracy score.
-            # print(item['id'])
+            """It starts by checking if the title of video has 'Official Audio' in it, to eliminate music videos.
+            Then, it checks whether the channel is a music channel by seeing ig channel title has 'Topic'.
+            Example: Natalie Holt - Topic only publishes songs by Natalie Holt, and not any variations unless decided by the artist.
+            Finally, it verifies the song duration by equating it to the original song duration to eliminate possibilities of a different version (margin of error = 2s)
+            Returns the one which has the highest accuracy score."""
+
             videoID = item["id"]["videoId"]
             currAccuracyScore = 0
 
@@ -638,7 +624,7 @@ async def playlist(
         return list(urlMap.values())
 
 
-@app.get("/analytics")
+@app.get("/analytics", include_in_schema=False)
 async def analytics():
     client = MongoClient(os.getenv("MONGO_URI"))
 
