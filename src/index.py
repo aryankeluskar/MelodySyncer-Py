@@ -641,3 +641,7 @@ async def analytics():
 
     client.close()
     return "No data found"
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(templates_dir + "/favicon.ico")
