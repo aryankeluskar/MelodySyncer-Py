@@ -447,52 +447,59 @@ description: "Converts a Spotify Song to a YouTube Song"
 
 @app.get("/song")
 async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
-    if query == "nope":
-        return "Please enter a query and try again"
+    try:
 
-    if youtubeAPIKEY == "default":
-        youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
+        if query == "nope":
+            return "Please enter a query and try again"
 
-    async with aiohttp.ClientSession() as session:
-        # print("did this work")
-        songName, artistName, albumName, songDuration = await getSongInfo(
-            session=session, query=query
-        )
-        #   print(songName, artistName, albumName, songDuration)
+        if youtubeAPIKEY == "default":
+            youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
 
-        songID = searchTrackYT(
-            session=session,
-            songName=songName,
-            artistName=artistName,
-            albumName=albumName,
-            songDuration=songDuration,
-            youtubeAPIKEY=youtubeAPIKEY,
-        )
-        final_song = await songID
-        #   print(final_song)
+        async with aiohttp.ClientSession() as session:
+            # print("did this work")
+            songName, artistName, albumName, songDuration = await getSongInfo(
+                session=session, query=query
+            )
+            #   print(songName, artistName, albumName, songDuration)
 
-        if final_song == "API Limit Exceeded for all YouTube API Keys":
-            return "API Limit Exceeded for all YouTube API Keys"
+            songID = searchTrackYT(
+                session=session,
+                songName=songName,
+                artistName=artistName,
+                albumName=albumName,
+                songDuration=songDuration,
+                youtubeAPIKEY=youtubeAPIKEY,
+                spotify_id=query,
+            )
+            final_song = await songID
+            #   print(final_song)
 
-        client = MongoClient(os.getenv("MONGO_URI"))
+            if final_song == "API Limit Exceeded for all YouTube API Keys":
+                return "API Limit Exceeded for all YouTube API Keys"
 
-        # Select the database and collection
-        db = client[os.getenv("MONGO_DB")]
-        collection = db[os.getenv("MONGO_COLLECTION")]
+            client = MongoClient(os.getenv("MONGO_URI"))
 
-        collection.update_many(
-            {},
-            {
-                "$inc": {
-                    "ISOtotalCalls": 5,
-                    "MESOtotalCalls": 1,
-                    "MESOsongsConverted": 1,
-                }
-            },
-        )
+            # Select the database and collection
+            db = client[os.getenv("MONGO_DB")]
+            collection = db[os.getenv("MONGO_COLLECTION")]
 
-        client.close()
-        return "https://www.youtube.com/watch?v=" + str(final_song)
+            collection.update_many(
+                {},
+                {
+                    "$inc": {
+                        "ISOtotalCalls": 5,
+                        "MESOtotalCalls": 1,
+                        "MESOsongsConverted": 1,
+                    }
+                },
+            )
+
+            client.close()
+            return "https://www.youtube.com/watch?v=" + str(final_song)
+        
+    except Exception as e:
+        print(e)
+        return "Something went wrong. Please try again later with another song."
 
 
 """
