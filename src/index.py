@@ -240,7 +240,7 @@ The Big Brains of thie Project!!!
 
 
 async def searchTrackYT(
-    session, songName, artistName, albumName, songDuration, youtubeAPIKEY
+    session, songName, artistName, albumName, songDuration, youtubeAPIKEY, spotify_id
 ):
     searchQuery = (
         str(songName)
@@ -418,7 +418,7 @@ async def getSongInfo(session, query):
 """
 
 
-async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
+async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response, spotify_id):
     curr = searchTrackYT(
         session=session,
         songName=str(song["track"]["name"]),
@@ -426,6 +426,7 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response):
         albumName=str(song["track"]["album"]["name"]),
         songDuration=int(song["track"]["duration_ms"]),
         youtubeAPIKEY=str(youtubeAPIKEY),
+        spotify_id=spotify_id,
     )
     curr_final = await curr
     curr_final = str(curr_final)
@@ -504,124 +505,133 @@ description: "Converts a Spotify Playlist to a YouTube Playlist"
 async def playlist(
     query: str = "nope", youtubeAPIKEY: str = "default", give_length: str = "no"
 ):
-    if query == "nope":
-        return "Please enter a query and try again"
+    try:
+        if query == "nope":
+            return "Please enter a query and try again"
 
-    if youtubeAPIKEY == "default":
-        youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
+        if youtubeAPIKEY == "default":
+            youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
 
-    async with aiohttp.ClientSession() as session:
-        start = time.time()
-        # print("did this work")
-        client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
-        client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+        async with aiohttp.ClientSession() as session:
+            start = time.time()
+            # print("did this work")
+            client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
+            client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
 
-        url = "https://accounts.spotify.com/api/token"
-        headers = {
-            "Authorization": "Basic "
-            + base64.b64encode(
-                (
-                    str(os.getenv("SPOTIPY_CLIENT_ID"))
-                    + ":"
-                    + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
-                ).encode()
-            ).decode()
-        }
-        data = {"grant_type": "client_credentials"}
+            url = "https://accounts.spotify.com/api/token"
+            headers = {
+                "Authorization": "Basic "
+                + base64.b64encode(
+                    (
+                        str(os.getenv("SPOTIPY_CLIENT_ID"))
+                        + ":"
+                        + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+                    ).encode()
+                ).decode()
+            }
+            data = {"grant_type": "client_credentials"}
 
-        response = requests.post(url, headers=headers, data=data).json()
+            response = requests.post(url, headers=headers, data=data).json()
 
-        print(response)
+            print(response)
 
-        # curl --request GET \
-        #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
-        #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
+            # curl --request GET \
+            #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
+            #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
 
-        playlist_id = query
-        url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-        headers = {
-            "Authorization": "Bearer " + response["access_token"],
-            "Content-Type": "application/json",
-        }
-        response = requests.get(url, headers=headers).json()
+            playlist_id = query
+            url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+            headers = {
+                "Authorization": "Bearer " + response["access_token"],
+                "Content-Type": "application/json",
+            }
+            response = requests.get(url, headers=headers).json()
 
-        #   print(response["items"])
+            #   print(response["items"])
 
-        urlMap = defaultdict()
-        valid_songs = set()
-        c = 1
-        for key in response["items"]:
-            c += 1
+            if "Resource not found" in str(response):
+                return {"list": "Playlist not found. Please try with an accessible public playlist"}
 
-            try:
-                if len(key["track"]["name"]) > 0:
-                    urlMap[key["track"]["id"]] = None
+            urlMap = defaultdict()
+            valid_songs = set()
+            c = 1
+            for key in response["items"]:
+                c += 1
 
-                valid_songs.add(key["track"]["id"])
+                try:
+                    if len(key["track"]["name"]) > 0:
+                        urlMap[key["track"]["id"]] = None
 
-            except:
-                print(f"Error in song: {key}")
-                continue
+                    valid_songs.add(key["track"]["id"])
 
-        tasks = []
-        for key in response["items"]:
-            try:
-                if len(key["track"]["name"]) > 0 and key["track"]["id"] in valid_songs:
-                    task = asyncio.ensure_future(
-                        process_indi_song(
-                            session=session,
-                            song=key,
-                            youtubeAPIKEY=youtubeAPIKEY,
-                            urlMap=urlMap,
-                            response=response,
+                except:
+                    print(f"Error in song: {key}")
+                    continue
+
+            tasks = []
+            for key in response["items"]:
+                try:
+                    if len(key["track"]["name"]) > 0 and key["track"]["id"] in valid_songs:
+                        task = asyncio.ensure_future(
+                            process_indi_song(
+                                session=session,
+                                song=key,
+                                youtubeAPIKEY=youtubeAPIKEY,
+                                urlMap=urlMap,
+                                response=response,
+                                spotify_id=key["track"]["id"],
+                            )
                         )
-                    )
-                    tasks.append(task)
+                        tasks.append(task)
 
-            except:
-                continue
+                except:
+                    continue
 
-        await asyncio.gather(*tasks)
-        client = MongoClient(os.getenv("MONGO_URI"))
+            await asyncio.gather(*tasks)
+            client = MongoClient(os.getenv("MONGO_URI"))
 
-        # Select the database and collection
-        db = client[os.getenv("MONGO_DB")]
-        collection = db[os.getenv("MONGO_COLLECTION")]
+            # Select the database and collection
+            db = client[os.getenv("MONGO_DB")]
+            collection = db[os.getenv("MONGO_COLLECTION")]
 
-        collection.update_many(
-            {},
-            {
-                "$inc": {
-                    "ISOtotalCalls": 5 * len(response["items"]),
-                    "MESOtotalCalls": 1,
-                    "MESOsongsConverted": len(response["items"]),
-                    "MESOplaylistsConverted": 1,
-                }
-            },
-        )
+            collection.update_many(
+                {},
+                {
+                    "$inc": {
+                        "ISOtotalCalls": 5 * len(response["items"]),
+                        "MESOtotalCalls": 1,
+                        "MESOsongsConverted": len(response["items"]),
+                        "MESOplaylistsConverted": 1,
+                    }
+                },
+            )
 
-        client.close()
-        end = time.time()
-        print(f"Time taken: {end-start}")
-        print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")
+            client.close()
+            end = time.time()
+            print(f"Time taken: {end-start}")
+            print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")
 
-        for i in urlMap:
-            if "API Limit Exceeded for all YouTube API" in urlMap[i]:
-                if give_length == "no":
-                    return "API Limit Exceeded for all YouTube API Keys"
+            for i in urlMap:
+                if "API Limit Exceeded for all YouTube API" in urlMap[i]:
+                    if give_length == "no":
+                        return "API Limit Exceeded for all YouTube API Keys"
 
+                    return {
+                        "list": "API Limit Exceeded for all YouTube API Keys",
+                        "length": int(len(response["items"])),
+                    }
+
+            if give_length == "yes":
                 return {
-                    "list": "API Limit Exceeded for all YouTube API Keys",
+                    "list": list(urlMap.values()),
                     "length": int(len(response["items"])),
                 }
 
-        if give_length == "yes":
-            return {
-                "list": list(urlMap.values()),
-                "length": int(len(response["items"])),
-            }
-
-        return list(urlMap.values())
+            return list(urlMap.values())
+        
+    except Exception as e:
+        print(e)
+        return {"list": "Something went wrong. Please try again later with another playlist."}
 
 
 @app.get("/analytics", include_in_schema=False)
