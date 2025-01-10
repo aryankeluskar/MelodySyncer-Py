@@ -475,7 +475,7 @@ async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
             #   print(final_song)
 
             if final_song == "API Limit Exceeded for all YouTube API Keys":
-                return "API Limit Exceeded for all YouTube API Keys"
+                return "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key."
 
             client = MongoClient(os.getenv("MONGO_URI"))
 
@@ -499,7 +499,7 @@ async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
         
     except Exception as e:
         print(e)
-        return "Something went wrong. Please try again later with another song."
+        return "Something went wrong. Please try again with another song."
 
 
 """
@@ -621,10 +621,10 @@ async def playlist(
             for i in urlMap:
                 if "API Limit Exceeded for all YouTube API" in urlMap[i]:
                     if give_length == "no":
-                        return "API Limit Exceeded for all YouTube API Keys"
+                        return "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key."
 
                     return {
-                        "list": "API Limit Exceeded for all YouTube API Keys",
+                        "list": "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key.",
                         "length": int(len(response["items"])),
                     }
 
@@ -638,7 +638,7 @@ async def playlist(
         
     except Exception as e:
         print(e)
-        return {"list": "Something went wrong. Please try again later with another playlist."}
+        return {"list": "Something went wrong. Please try again with another playlist."}
 
 
 @app.get("/analytics", include_in_schema=False)
