@@ -5,13 +5,35 @@ import aiohttp
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 import os
+import json
 
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 load_dotenv()
 from pymongo import MongoClient
-import json
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+import dns.resolver
+dns.resolver.default_timeout = 30  # Increase DNS resolver timeout
+
+# Configure MongoDB client with better connection options
+def get_mongo_client():
+    try:
+        client = MongoClient(
+            os.getenv("MONGO_URI"),
+            serverSelectionTimeoutMS=30000,  # Increase server selection timeout
+            connectTimeoutMS=20000,          # Connection timeout
+            socketTimeoutMS=20000,           # Socket timeout
+            maxPoolSize=1,                   # Minimize connections for serverless
+            retryWrites=True,               # Enable retry writes
+            w='majority'                    # Write concern
+        )
+        # Force a connection to verify it works
+        client.admin.command('ping')
+        return client
+    except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+        print(f"Failed to connect to MongoDB: {e}")
+        return None
 
 app = FastAPI()
 
@@ -27,54 +49,6 @@ app.mount(
 
 import base64
 import requests
-
-
-"""
-route just for testing purposes
-"""
-# @app.get("/token")
-# async def token():
-#    print("env file check: "+str(os.getenv("YOUTUBE_API_KEY")))
-#    print("env file check: "+str(os.getenv("SPOTIPY_CLIENT_ID")))
-#    print("env file check: "+str(os.getenv("SPOTIPY_CLIENT_SECRET")))
-
-#    client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
-#    client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
-
-#    url = "https://accounts.spotify.com/api/token"
-#    headers = {
-#       "Authorization": "Basic "
-#       + base64.b64encode(
-#          (
-#                str(os.getenv("SPOTIPY_CLIENT_ID"))
-#                + ":"
-#                + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
-#          ).encode()
-#       ).decode()
-#    }
-#    data = {"grant_type": "client_credentials"}
-
-#    response = requests.post(url, headers=headers, data=data).json()
-
-#    # curl --request GET \
-#    #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
-#    #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
-
-#    playlist_id = "3cEYpjA9oz9GiPac4AsH4n"
-#    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-#    headers = {
-#          "Authorization": "Bearer " + response["access_token"],
-#          "Content-Type": "application/json",
-#       }
-#    response = requests.get(url, headers=headers).json()
-
-#    tracklist = []
-#    # print(response)
-#    for i in response["items"]:
-#       # print(i["track"]["name"])
-#       tracklist.append(i["track"]["name"])
-
-#    return {"message": tracklist}
 
 """
 route: "/"
@@ -448,58 +422,74 @@ description: "Converts a Spotify Song to a YouTube Song"
 @app.get("/song")
 async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
     try:
-
         if query == "nope":
-            return "Please enter a query and try again"
+            return {"status": "error", "message": "Please enter a valid Spotify song ID"}
 
         if youtubeAPIKEY == "default":
             youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
+            if not youtubeAPIKEY:
+                return {"status": "error", "message": "No YouTube API key found in environment variables"}
 
         async with aiohttp.ClientSession() as session:
-            # print("did this work")
-            songName, artistName, albumName, songDuration = await getSongInfo(
-                session=session, query=query
-            )
-            #   print(songName, artistName, albumName, songDuration)
+            try:
+                songName, artistName, albumName, songDuration = await getSongInfo(
+                    session=session, query=query
+                )
+                if not all([songName, artistName, albumName, songDuration]):
+                    return {"status": "error", "message": "Could not fetch song information from Spotify. Please check if the song ID is valid."}
 
-            songID = searchTrackYT(
-                session=session,
-                songName=songName,
-                artistName=artistName,
-                albumName=albumName,
-                songDuration=songDuration,
-                youtubeAPIKEY=youtubeAPIKEY,
-                spotify_id=query,
-            )
-            final_song = await songID
-            #   print(final_song)
+                songID = searchTrackYT(
+                    session=session,
+                    songName=songName,
+                    artistName=artistName,
+                    albumName=albumName,
+                    songDuration=songDuration,
+                    youtubeAPIKEY=youtubeAPIKEY,
+                    spotify_id=query,
+                )
+                final_song = await songID
 
-            if final_song == "API Limit Exceeded for all YouTube API Keys":
-                return "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key."
+                if final_song == "API Limit Exceeded for all YouTube API Keys":
+                    return {"status": "error", "message": "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key."}
 
-            client = MongoClient(os.getenv("MONGO_URI"))
+                if final_song == "dQw4w9WgXcQ":
+                    return {"status": "error", "message": "No matching song found on YouTube"}
 
-            # Select the database and collection
-            db = client[os.getenv("MONGO_DB")]
-            collection = db[os.getenv("MONGO_COLLECTION")]
+                try:
+                    client = get_mongo_client()
+                    if client:
+                        try:
+                            db = client[os.getenv("MONGO_DB")]
+                            collection = db[os.getenv("MONGO_COLLECTION")]
 
-            collection.update_many(
-                {},
-                {
-                    "$inc": {
-                        "ISOtotalCalls": 5,
-                        "MESOtotalCalls": 1,
-                        "MESOsongsConverted": 1,
-                    }
-                },
-            )
+                            collection.update_many(
+                                {},
+                                {
+                                    "$inc": {
+                                        "ISOtotalCalls": 5,
+                                        "MESOtotalCalls": 1,
+                                        "MESOsongsConverted": 1,
+                                    }
+                                },
+                                upsert=True  # Create document if it doesn't exist
+                            )
+                        except Exception as mongo_error:
+                            print(f"MongoDB Operation Error: {mongo_error}")
+                        finally:
+                            client.close()
+                    else:
+                        print("Skipping analytics due to MongoDB connection failure")
+                except Exception as e:
+                    print(f"MongoDB Setup Error: {e}")
 
-            client.close()
-            return "https://www.youtube.com/watch?v=" + str(final_song)
-        
+                return {"status": "success", "url": "https://www.youtube.com/watch?v=" + str(final_song)}
+
+            except aiohttp.ClientError as e:
+                return {"status": "error", "message": f"Network error while fetching data: {str(e)}"}
+            
     except Exception as e:
-        print(e)
-        return "Something went wrong. Please try again with another song."
+        print(f"Unexpected error in /song endpoint: {str(e)}")
+        return {"status": "error", "message": "An unexpected error occurred. Please try again later."}
 
 
 """
@@ -514,150 +504,185 @@ async def playlist(
 ):
     try:
         if query == "nope":
-            return "Please enter a query and try again"
+            return {"status": "error", "message": "Please enter a valid Spotify playlist ID"}
 
         if youtubeAPIKEY == "default":
             youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
+            if not youtubeAPIKEY:
+                return {"status": "error", "message": "No YouTube API key found in environment variables"}
 
         async with aiohttp.ClientSession() as session:
-            start = time.time()
-            # print("did this work")
-            client_id = str(os.getenv("SPOTIPY_CLIENT_ID"))
-            client_secret = str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+            try:
+                start = time.time()
+                
+                try:
+                    url = "https://accounts.spotify.com/api/token"
+                    headers = {
+                        "Authorization": "Basic "
+                        + base64.b64encode(
+                            (
+                                str(os.getenv("SPOTIPY_CLIENT_ID"))
+                                + ":"
+                                + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
+                            ).encode()
+                        ).decode()
+                    }
+                    data = {"grant_type": "client_credentials"}
 
-            url = "https://accounts.spotify.com/api/token"
-            headers = {
-                "Authorization": "Basic "
-                + base64.b64encode(
-                    (
-                        str(os.getenv("SPOTIPY_CLIENT_ID"))
-                        + ":"
-                        + str(os.getenv("SPOTIPY_CLIENT_SECRET"))
-                    ).encode()
-                ).decode()
-            }
-            data = {"grant_type": "client_credentials"}
-
-            response = requests.post(url, headers=headers, data=data).json()
-
-            print(response)
-
-            # curl --request GET \
-            #   --url https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks \
-            #   --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
-
-            playlist_id = query
-            url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-            headers = {
-                "Authorization": "Bearer " + response["access_token"],
-                "Content-Type": "application/json",
-            }
-            response = requests.get(url, headers=headers).json()
-
-            #   print(response["items"])
-
-            if "Resource not found" in str(response):
-                return {"list": "Playlist not found. Please try with an accessible public playlist"}
-
-            urlMap = defaultdict()
-            valid_songs = set()
-            c = 1
-            for key in response["items"]:
-                c += 1
+                    response = requests.post(url, headers=headers, data=data)
+                    if response.status_code != 200:
+                        return {"status": "error", "message": "Failed to authenticate with Spotify"}
+                    
+                    response = response.json()
+                except requests.RequestException as e:
+                    return {"status": "error", "message": f"Failed to connect to Spotify: {str(e)}"}
 
                 try:
-                    if len(key["track"]["name"]) > 0:
-                        urlMap[key["track"]["id"]] = None
+                    playlist_id = query
+                    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+                    headers = {
+                        "Authorization": "Bearer " + response["access_token"],
+                        "Content-Type": "application/json",
+                    }
+                    playlist_response = requests.get(url, headers=headers)
+                    
+                    if playlist_response.status_code == 404:
+                        return {"status": "error", "message": "Playlist not found. Please check if the playlist exists and is public."}
+                    elif playlist_response.status_code != 200:
+                        return {"status": "error", "message": "Failed to fetch playlist from Spotify"}
+                        
+                    response = playlist_response.json()
+                except requests.RequestException as e:
+                    return {"status": "error", "message": f"Failed to fetch playlist: {str(e)}"}
 
-                    valid_songs.add(key["track"]["id"])
+                if "error" in response:
+                    return {"status": "error", "message": response.get("error", {}).get("message", "Unknown Spotify API error")}
 
-                except:
-                    print(f"Error in song: {key}")
-                    continue
+                if not response.get("items"):
+                    return {"status": "error", "message": "This playlist is empty"}
 
-            tasks = []
-            for key in response["items"]:
-                try:
-                    if len(key["track"]["name"]) > 0 and key["track"]["id"] in valid_songs:
-                        task = asyncio.ensure_future(
-                            process_indi_song(
-                                session=session,
-                                song=key,
-                                youtubeAPIKEY=youtubeAPIKEY,
-                                urlMap=urlMap,
-                                response=response,
-                                spotify_id=key["track"]["id"],
+                urlMap = defaultdict()
+                valid_songs = set()
+                
+                for key in response["items"]:
+                    try:
+                        if key.get("track", {}) and key["track"].get("name") and key["track"].get("id"):
+                            urlMap[key["track"]["id"]] = None
+                            valid_songs.add(key["track"]["id"])
+                    except Exception as e:
+                        print(f"Error processing song in playlist: {str(e)}")
+                        continue
+
+                if not valid_songs:
+                    return {"status": "error", "message": "No valid songs found in playlist"}
+
+                tasks = []
+                for key in response["items"]:
+                    try:
+                        if (key.get("track", {}).get("name") 
+                            and key["track"]["id"] in valid_songs):
+                            task = asyncio.ensure_future(
+                                process_indi_song(
+                                    session=session,
+                                    song=key,
+                                    youtubeAPIKEY=youtubeAPIKEY,
+                                    urlMap=urlMap,
+                                    response=response,
+                                    spotify_id=key["track"]["id"],
+                                )
                             )
-                        )
-                        tasks.append(task)
+                            tasks.append(task)
+                    except Exception as e:
+                        print(f"Error creating task for song: {str(e)}")
+                        continue
 
-                except:
-                    continue
+                try:
+                    await asyncio.gather(*tasks)
+                except Exception as e:
+                    return {"status": "error", "message": f"Error processing songs: {str(e)}"}
 
-            await asyncio.gather(*tasks)
-            client = MongoClient(os.getenv("MONGO_URI"))
+                try:
+                    client = get_mongo_client()
+                    if client:
+                        try:
+                            db = client[os.getenv("MONGO_DB")]
+                            collection = db[os.getenv("MONGO_COLLECTION")]
 
-            # Select the database and collection
-            db = client[os.getenv("MONGO_DB")]
-            collection = db[os.getenv("MONGO_COLLECTION")]
+                            collection.update_many(
+                                {},
+                                {
+                                    "$inc": {
+                                        "ISOtotalCalls": 5 * len(response["items"]),
+                                        "MESOtotalCalls": 1,
+                                        "MESOsongsConverted": len(response["items"]),
+                                        "MESOplaylistsConverted": 1,
+                                    }
+                                },
+                                upsert=True  # Create document if it doesn't exist
+                            )
+                        except Exception as mongo_error:
+                            print(f"MongoDB Operation Error: {mongo_error}")
+                        finally:
+                            client.close()
+                    else:
+                        print("Skipping analytics due to MongoDB connection failure")
+                except Exception as e:
+                    print(f"MongoDB Setup Error: {e}")
 
-            collection.update_many(
-                {},
-                {
-                    "$inc": {
-                        "ISOtotalCalls": 5 * len(response["items"]),
-                        "MESOtotalCalls": 1,
-                        "MESOsongsConverted": len(response["items"]),
-                        "MESOplaylistsConverted": 1,
-                    }
-                },
-            )
+                end = time.time()
+                print(f"Time taken: {end-start}")
+                print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")
 
-            client.close()
-            end = time.time()
-            print(f"Time taken: {end-start}")
-            print(f"Time taken per song: {(end-start)/len(response['items'])} seconds")
+                for i in urlMap:
+                    if "API Limit Exceeded for all YouTube API" in str(urlMap[i]):
+                        error_response = {
+                            "status": "error",
+                            "message": "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key."
+                        }
+                        if give_length == "yes":
+                            error_response["length"] = len(response["items"])
+                        return error_response
 
-            for i in urlMap:
-                if "API Limit Exceeded for all YouTube API" in urlMap[i]:
-                    if give_length == "no":
-                        return "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key."
-
-                    return {
-                        "list": "API Limit Exceeded for all YouTube API Keys. Please try again later or enter your own YouTube API Key.",
-                        "length": int(len(response["items"])),
-                    }
-
-            if give_length == "yes":
-                return {
+                result = {
+                    "status": "success",
                     "list": list(urlMap.values()),
-                    "length": int(len(response["items"])),
                 }
+                if give_length == "yes":
+                    result["length"] = len(response["items"])
+                return result
 
-            return list(urlMap.values())
-        
+            except aiohttp.ClientError as e:
+                return {"status": "error", "message": f"Network error while processing playlist: {str(e)}"}
+            
     except Exception as e:
-        print(e)
-        return {"list": "Something went wrong. Please try again with another playlist."}
+        print(f"Unexpected error in /playlist endpoint: {str(e)}")
+        return {"status": "error", "message": "An unexpected error occurred. Please try again later."}
 
 
 @app.get("/analytics", include_in_schema=False)
 async def analytics():
-    client = MongoClient(os.getenv("MONGO_URI"))
+    try:
+        client = get_mongo_client()
+        if not client:
+            return {"status": "error", "message": "Failed to connect to MongoDB"}
 
-    # Select the database and collection
-    db = client[os.getenv("MONGO_DB")]
-    collection = db[os.getenv("MONGO_COLLECTION")]
+        try:
+            db = client[os.getenv("MONGO_DB")]
+            collection = db[os.getenv("MONGO_COLLECTION")]
 
-    all_data = collection.find({})
-    print("Data from the Database")
-    for data in all_data:
-        data.pop("_id")
-        print(data)
-        return data
+            all_data = collection.find({})
+            result = []
+            for data in all_data:
+                data.pop("_id")
+                result.append(data)
 
-    client.close()
-    return "No data found"
+            return {"status": "success", "data": result} if result else {"status": "success", "message": "No data found"}
+        except Exception as e:
+            return {"status": "error", "message": f"Failed to fetch analytics: {str(e)}"}
+        finally:
+            client.close()
+    except Exception as e:
+        return {"status": "error", "message": f"MongoDB setup error: {str(e)}"}
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():

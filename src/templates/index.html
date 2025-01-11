@@ -175,100 +175,117 @@
 </body>
 
 <script>
-    function convert() {
-        // const buttonElement = document.getElementsByClassName('button')[0];
-        // console.log(document.getElementById("convertButton").innerHTML);
-
-        // disable the button
-        // buttonElement.disabled = true;
-        // buttonElement.style.opacity = 0.5;
-        // buttonElement.innerHTML = "Converting...";
-
-        performAPICall();
-
+    function showError(message) {
+        document.getElementById("outputArea").value = "Error: " + message;
+        document.getElementById("outputArea").style.color = "red";
+        document.getElementById("timeTaken").value = "";
+        document.getElementById("outputURL").value = "";
     }
 
-    function performAPICall() {
+    function resetUI() {
+        document.getElementById("outputArea").style.color = "black";
+        document.getElementById("outputArea").value = "";
+        document.getElementById("timeTaken").value = "";
+        document.getElementById("outputURL").value = "";
+        document.getElementById("convertButton").disabled = false;
+        document.getElementById("convertButton").style.opacity = 1;
+        document.getElementById("convertButton").innerHTML = "Convert!";
+    }
+
+    function validateSpotifyUrl(url) {
+        if (!url) {
+            showError("Please enter a Spotify URL");
+            return false;
+        }
+        if (!url.includes("open.spotify.com")) {
+            showError("Invalid URL. Please enter a valid Spotify URL");
+            return false;
+        }
+        if (!url.includes("track") && !url.includes("playlist")) {
+            showError("Invalid URL. URL must be a Spotify track or playlist");
+            return false;
+        }
+        return true;
+    }
+
+    async function convert() {
+        resetUI();
+        const buttonElement = document.getElementById("convertButton");
         const inputQuery = document.getElementById('inputQuery');
-        // start a stopwatch
-        var startTime = new Date().getTime();
 
-        currURL = window.location.href;
-        console.log(currURL);
-
-        if (inputQuery.value.includes("open.spotify.com")) {
-            if (inputQuery.value.includes("track")) {
-                // progressBar.style.animation = "progressBarAnimation 2s linear";
-                if (document.getElementById("inputAPIKEY").value == "") {
-                    let query = inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6);
-                    if (query.includes("?si")) {
-                        query = query.substring(0, query.indexOf("?si"));
-                    }
-                    backendQuery = "./song?query=" + query + "&youtubeAPIKEY=default";
-                }
-                else {
-                    let query = inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6);
-                    if (query.includes("?si")) {
-                        query = query.substring(0, query.indexOf("?si"));
-                    }
-                    backendQuery = "./song?query=" + query + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
-                }
-            }
-
-            else if (inputQuery.value.includes("playlist")) {
-                // if api input is empty, then the backend will use the default api key which is stored in .env
-
-                if (document.getElementById("inputAPIKEY").value == "") {
-                    let query = inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9);
-                    if (query.includes("?si")) {
-                        query = query.substring(0, query.indexOf("?si"));
-                    }
-                    backendQuery = "./playlist?query=" + query + "&youtubeAPIKEY=default";
-                }
-                else {
-                    let query = inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9);
-                    if (query.includes("?si")) {
-                        query = query.substring(0, query.indexOf("?si"));
-                    }
-                    backendQuery = "./playlist?query=" + query + "&youtubeAPIKEY=" + document.getElementById("inputAPIKEY").value;
-                }
-            }
-
-
-            var xhr = new XMLHttpRequest();
-            console.log(backendQuery);
-            document.getElementById("outputURL").value = "https://melodysyncer.aryankeluskar.com/" + backendQuery.substring(2);
-            // console.log(backendQuery);
-
-            backendQuery += "&give_length=yes";
-            xhr.open("GET", backendQuery, false);
-            // xhr.onload = function () {
-            //    // Hide the progress bar after receiving the response
-            //    progressContainer.style.display = "none";
-            // };
-            xhr.send();
-
-            final_response = JSON.parse(xhr.responseText);
-
-            console.log(final_response);
-            document.getElementById("outputArea").value = final_response
-
-            // stop the stopwatch
-            var endTime = new Date().getTime();
-
-            // calculate the time taken
-            var timeTaken = endTime - startTime;
-            document.getElementById("timeTaken").value = "Time Taken: " + timeTaken / 1000 + "s";
-
-            if (inputQuery.value.includes("playlist")) {
-                length = parseInt(final_response["length"]);
-                document.getElementById("outputArea").value = final_response["list"];
-                document.getElementById("timeTaken").value = "Time Taken: " + timeTaken / 1000 + " seconds" + "\nTime taken per song: " + timeTaken / 1000 / length + " seconds";
-            }
-        } else {
-            alert("Invalid URL")
+        if (!validateSpotifyUrl(inputQuery.value)) {
+            return;
         }
 
+        buttonElement.disabled = true;
+        buttonElement.style.opacity = 0.5;
+        buttonElement.innerHTML = "Converting...";
+
+        try {
+            await performAPICall();
+        } catch (error) {
+            showError("An unexpected error occurred. Please try again later.");
+            console.error("Error during conversion:", error);
+        } finally {
+            buttonElement.disabled = false;
+            buttonElement.style.opacity = 1;
+            buttonElement.innerHTML = "Convert!";
+        }
+    }
+
+    async function performAPICall() {
+        const inputQuery = document.getElementById('inputQuery');
+        const startTime = new Date().getTime();
+        let backendQuery = "";
+
+        try {
+            if (inputQuery.value.includes("track")) {
+                let query = inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6);
+                if (query.includes("?")) {
+                    query = query.substring(0, query.indexOf("?"));
+                }
+                backendQuery = `./song?query=${query}&youtubeAPIKEY=${document.getElementById("inputAPIKEY").value || 'default'}`;
+            } else if (inputQuery.value.includes("playlist")) {
+                let query = inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9);
+                if (query.includes("?")) {
+                    query = query.substring(0, query.indexOf("?"));
+                }
+                backendQuery = `./playlist?query=${query}&youtubeAPIKEY=${document.getElementById("inputAPIKEY").value || 'default'}`;
+            }
+
+            document.getElementById("outputURL").value = "https://melodysyncer.aryankeluskar.com/" + backendQuery.substring(2);
+
+            const response = await fetch(backendQuery + "&give_length=yes");
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            if (data.status === "error") {
+                showError(data.message);
+                return;
+            }
+
+            const endTime = new Date().getTime();
+            const timeTaken = (endTime - startTime) / 1000;
+
+            if (inputQuery.value.includes("playlist")) {
+                const length = data.length || (data.list && data.list.length) || 0;
+                document.getElementById("outputArea").value = data.list;
+                document.getElementById("timeTaken").value = `Time Taken: ${timeTaken} seconds\nTime taken per song: ${timeTaken / length} seconds`;
+            } else {
+                document.getElementById("outputArea").value = data.url || JSON.stringify(data);
+                document.getElementById("timeTaken").value = `Time Taken: ${timeTaken} seconds`;
+            }
+
+        } catch (error) {
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                showError("Network error. Please check your internet connection.");
+            } else {
+                showError("Failed to process your request. Please try again later.");
+            }
+            console.error("API call error:", error);
+        }
     }
 </script>
 
