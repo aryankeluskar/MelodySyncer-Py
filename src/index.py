@@ -2,14 +2,16 @@ import asyncio
 from collections import defaultdict
 import time
 import aiohttp
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 import os
 import json
 import sys
+from typing import Optional
 
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 import motor.motor_asyncio
@@ -413,6 +415,9 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response, spot
 """
 route: "/song"
 description: "Converts a Spotify Song to a YouTube Song"
+parameters:
+    - query: Spotify song ID (required)
+    - X-YouTube-API-Key: YouTube API Key (optional, can be passed as header or query parameter)
 """
 
 
@@ -444,15 +449,20 @@ async def update_song_analytics(client):
         print(f"MongoDB Setup Error: {e}")
 
 @app.get("/song")
-async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
+async def song(query: str = "nope", youtubeAPIKEY: Optional[str] = None, request: Request = None):
     try:
         if query == "nope":
             return {"status": "error", "message": "Please enter a valid Spotify song ID"}
 
-        if youtubeAPIKEY == "default":
+        # Get YouTube API key from header if not provided as parameter
+        if not youtubeAPIKEY and request:
+            youtubeAPIKEY = request.headers.get('X-YouTube-API-Key')
+        
+        # If still no API key, use default from environment
+        if not youtubeAPIKEY:
             youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
             if not youtubeAPIKEY:
-                return {"status": "error", "message": "No YouTube API key found in environment variables"}
+                return {"status": "error", "message": "No YouTube API key found"}
 
         async with aiohttp.ClientSession() as session:
             try:
@@ -498,6 +508,9 @@ async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
 """
 route: "/playlist"
 description: "Converts a Spotify Playlist to a YouTube Playlist"
+parameters:
+    - query: Spotify playlist ID (required)
+    - X-YouTube-API-Key: YouTube API Key (optional, can be passed as header or query parameter)
 """
 
 
@@ -531,7 +544,7 @@ async def update_playlist_analytics(client, num_items):
 
 @app.get("/playlist")
 async def playlist(
-    query: str = "nope", youtubeAPIKEY: str = "default", give_length: str = "no"
+    query: str = "nope", youtubeAPIKEY: Optional[str] = None, give_length: str = "no", request: Request = None
 ):
     try:
         import traceback
@@ -539,10 +552,15 @@ async def playlist(
         if query == "nope":
             return {"status": "error", "message": "Please enter a valid Spotify playlist ID"}
 
-        if youtubeAPIKEY == "default":
+        # Get YouTube API key from header if not provided as parameter
+        if not youtubeAPIKEY and request:
+            youtubeAPIKEY = request.headers.get('X-YouTube-API-Key')
+        
+        # If still no API key, use default from environment
+        if not youtubeAPIKEY:
             youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
             if not youtubeAPIKEY:
-                return {"status": "error", "message": "No YouTube API key found in environment variables"}
+                return {"status": "error", "message": "No YouTube API key found"}
 
         async with aiohttp.ClientSession() as session:
             try:

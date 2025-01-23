@@ -26,15 +26,26 @@ Visit [dub.sh/melodysyncer](https://dub.sh/melodysyncer) to access this API. Che
 <hr>
 
 ### GET /song
-    Parameters: query (string) ID of the song in Spotify, youtubeAPIKEY (string) Google Cloud API Key with YouTube Data v3 enabled.
+    Parameters: 
+    - query (string): ID of the song in Spotify
+    - X-YouTube-API-Key (header, optional): Google Cloud API Key with YouTube Data v3 enabled
     Response: (string) Accurate Youtube ID of the song, neglecting any remix, cover, and music videos
     
 <hr>
 
 ### GET /playlist
-    Parameters: query (string) ID of the song in Spotify, youtubeAPIKEY (string) Google Cloud API Key with YouTube Data v3 enabled.
+    Parameters: 
+    - query (string): ID of the playlist in Spotify
+    - X-YouTube-API-Key (header, optional): Google Cloud API Key with YouTube Data v3 enabled
     Response: (list of str) List / Array of Strings, each element contains the Youtube URL for the song. The indices remain same from Spotify Playlist
-    
+
+## API Key Usage
+You can provide the YouTube API key in two ways:
+1. As a query parameter: `?youtubeAPIKEY=YOUR_API_KEY`
+2. As a header: `X-YouTube-API-Key: YOUR_API_KEY`
+
+If no API key is provided, the server will use its default API key which has a limited trial.
+
 ## Support this project!
 ### This is my second ever API! Please consider leaving a 🌟 if this added value to your wonderful project
 ### Made with pure love and [freshman fascination](## "it's a real term i swear"). Visit my website at [aryankeluskar.github.io](https://aryankeluskar.github.io) <3
