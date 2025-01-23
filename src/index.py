@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 import os
 import json
+import sys
 
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
@@ -533,6 +534,8 @@ async def playlist(
     query: str = "nope", youtubeAPIKEY: str = "default", give_length: str = "no"
 ):
     try:
+        import traceback
+
         if query == "nope":
             return {"status": "error", "message": "Please enter a valid Spotify playlist ID"}
 
@@ -562,10 +565,12 @@ async def playlist(
                     # Use aiohttp instead of requests
                     async with session.post(url, headers=headers, data=data) as response:
                         if response.status != 200:
-                            return {"status": "error", "message": "Failed to authenticate with Spotify"}
+                            error_line = traceback.extract_tb(sys.exc_info()[2])[-1].lineno
+                            return {"status": "error", "message": f"Failed to authenticate with Spotify at line {error_line}"}
                         response = await response.json()
                 except Exception as e:
-                    return {"status": "error", "message": f"Failed to connect to Spotify: {str(e)}"}
+                    error_line = traceback.extract_tb(e.__traceback__)[-1].lineno
+                    return {"status": "error", "message": f"Failed to connect to Spotify at line {error_line}: {str(e)}"}
 
                 try:
                     playlist_id = query
@@ -578,16 +583,20 @@ async def playlist(
                     # Use aiohttp instead of requests
                     async with session.get(url, headers=headers) as playlist_response:
                         if playlist_response.status == 404:
-                            return {"status": "error", "message": "Playlist not found. Please check if the playlist exists and is public."}
+                            error_line = traceback.extract_tb(sys.exc_info()[2])[-1].lineno
+                            return {"status": "error", "message": f"Playlist not found at line {error_line}. Please check if the playlist exists and is public."}
                         elif playlist_response.status != 200:
-                            return {"status": "error", "message": "Failed to fetch playlist from Spotify"}
+                            error_line = traceback.extract_tb(sys.exc_info()[2])[-1].lineno
+                            return {"status": "error", "message": f"Failed to fetch playlist from Spotify at line {error_line}"}
                         
                         response = await playlist_response.json()
                 except Exception as e:
-                    return {"status": "error", "message": f"Failed to fetch playlist: {str(e)}"}
+                    error_line = traceback.extract_tb(e.__traceback__)[-1].lineno
+                    return {"status": "error", "message": f"Failed to fetch playlist at line {error_line}: {str(e)}"}
 
                 if "error" in response:
-                    return {"status": "error", "message": response.get("error", {}).get("message", "Unknown Spotify API error")}
+                    error_line = traceback.extract_tb(sys.exc_info()[2])[-1].lineno
+                    return {"status": "error", "message": f"Spotify API error at line {error_line}: {response.get('error', {}).get('message', 'Unknown error')}"}
 
                 if not response.get("items"):
                     return {"status": "error", "message": "This playlist is empty"}
@@ -615,7 +624,8 @@ async def playlist(
                                 )
                                 tasks.append(task)
                     except Exception as e:
-                        print(f"Error processing song in playlist: {str(e)}")
+                        error_line = traceback.extract_tb(e.__traceback__)[-1].lineno
+                        print(f"Error processing song in playlist at line {error_line}: {str(e)}")
                         continue
 
                 if not valid_songs:
@@ -624,7 +634,8 @@ async def playlist(
                 try:
                     await asyncio.gather(*tasks)
                 except Exception as e:
-                    return {"status": "error", "message": f"Error processing songs: {str(e)}"}
+                    error_line = traceback.extract_tb(e.__traceback__)[-1].lineno
+                    return {"status": "error", "message": f"Error processing songs at line {error_line}: {str(e)}"}
 
                 end = time.time()
                 print(f"Time taken: {end-start}")
@@ -655,11 +666,13 @@ async def playlist(
                 return result
 
             except aiohttp.ClientError as e:
-                return {"status": "error", "message": f"Network error while processing playlist: {str(e)}"}
+                error_line = traceback.extract_tb(e.__traceback__)[-1].lineno
+                return {"status": "error", "message": f"Network error while processing playlist at line {error_line}: {str(e)}"}
             
     except Exception as e:
-        print(f"Unexpected error in /playlist endpoint: {str(e)}")
-        return {"status": "error", "message": "An unexpected error occurred. Please try again later."}
+        error_line = traceback.extract_tb(e.__traceback__)[-1].lineno
+        print(f"Unexpected error in /playlist endpoint at line {error_line}: {str(e)}")
+        return {"status": "error", "message": f"An unexpected error occurred at line {error_line}. Please try again later."}
 
 
 @app.get("/analytics", include_in_schema=False)
