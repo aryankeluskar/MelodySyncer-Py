@@ -449,9 +449,9 @@ async def update_song_analytics(client):
         print(f"MongoDB Setup Error: {e}")
 
 @app.get("/song")
-async def song(query: str = "nope", youtubeAPIKEY: Optional[str] = None, request: Request = None):
+async def song(query: str = "null", youtubeAPIKEY: Optional[str] = None, request: Request = None):
     try:
-        if query == "nope":
+        if query == "null":
             return {"status": "error", "message": "Please enter a valid Spotify song ID"}
 
         # Get YouTube API key from header if not provided as parameter
@@ -459,7 +459,7 @@ async def song(query: str = "nope", youtubeAPIKEY: Optional[str] = None, request
             youtubeAPIKEY = request.headers.get('X-YouTube-API-Key')
         
         # If still no API key, use default from environment
-        if not youtubeAPIKEY:
+        if not youtubeAPIKEY or youtubeAPIKEY == "default":
             youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
             if not youtubeAPIKEY:
                 return {"status": "error", "message": "No YouTube API key found"}
@@ -544,12 +544,12 @@ async def update_playlist_analytics(client, num_items):
 
 @app.get("/playlist")
 async def playlist(
-    query: str = "nope", youtubeAPIKEY: Optional[str] = None, give_length: str = "no", request: Request = None
+    query: str = "null", youtubeAPIKEY: Optional[str] = None, give_length: str = "no", request: Request = None
 ):
     try:
         import traceback
 
-        if query == "nope":
+        if query == "null":
             return {"status": "error", "message": "Please enter a valid Spotify playlist ID"}
 
         # Get YouTube API key from header if not provided as parameter
@@ -557,7 +557,7 @@ async def playlist(
             youtubeAPIKEY = request.headers.get('X-YouTube-API-Key')
         
         # If still no API key, use default from environment
-        if not youtubeAPIKEY:
+        if not youtubeAPIKEY or youtubeAPIKEY == "default":
             youtubeAPIKEY = os.getenv("YOUTUBE_API_KEY")
             if not youtubeAPIKEY:
                 return {"status": "error", "message": "No YouTube API key found"}
