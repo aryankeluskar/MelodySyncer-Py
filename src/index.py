@@ -11,28 +11,25 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 load_dotenv()
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+import motor.motor_asyncio
 import dns.resolver
 dns.resolver.default_timeout = 30  # Increase DNS resolver timeout
 
 # Configure MongoDB client with better connection options
-def get_mongo_client():
+async def get_mongo_client():
     try:
-        client = MongoClient(
+        client = motor.motor_asyncio.AsyncIOMotorClient(
             os.getenv("MONGO_URI"),
-            serverSelectionTimeoutMS=30000,  # Increase server selection timeout
-            connectTimeoutMS=20000,          # Connection timeout
-            socketTimeoutMS=20000,           # Socket timeout
-            maxPoolSize=1,                   # Minimize connections for serverless
-            retryWrites=True,               # Enable retry writes
-            w='majority'                    # Write concern
+            serverSelectionTimeoutMS=30000,
+            connectTimeoutMS=20000,
+            socketTimeoutMS=20000,
+            maxPoolSize=1,
+            retryWrites=True,
+            w='majority'
         )
-        # Force a connection to verify it works
-        client.admin.command('ping')
         return client
-    except (ConnectionFailure, ServerSelectionTimeoutError) as e:
-        print(f"Failed to connect to MongoDB: {e}")
+    except Exception as e:
+        print(f"Failed to create MongoDB client: {e}")
         return None
 
 app = FastAPI()
@@ -48,7 +45,6 @@ app.mount(
 )
 
 import base64
-import requests
 
 """
 route: "/"
@@ -419,6 +415,33 @@ description: "Converts a Spotify Song to a YouTube Song"
 """
 
 
+async def update_song_analytics(client):
+    try:
+        if client:
+            try:
+                db = client[os.getenv("MONGO_DB")]
+                collection = db[os.getenv("MONGO_COLLECTION")]
+
+                await collection.update_many(
+                    {},
+                    {
+                        "$inc": {
+                            "ISOtotalCalls": 5,
+                            "MESOtotalCalls": 1,
+                            "MESOsongsConverted": 1,
+                        }
+                    },
+                    upsert=True
+                )
+            except Exception as mongo_error:
+                print(f"MongoDB Operation Error: {mongo_error}")
+            finally:
+                client.close()
+        else:
+            print("Skipping analytics due to MongoDB connection failure")
+    except Exception as e:
+        print(f"MongoDB Setup Error: {e}")
+
 @app.get("/song")
 async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
     try:
@@ -455,32 +478,11 @@ async def song(query: str = "nope", youtubeAPIKEY: str = "default"):
                 if final_song == "dQw4w9WgXcQ":
                     return {"status": "error", "message": "No matching song found on YouTube"}
 
-                try:
-                    client = get_mongo_client()
-                    if client:
-                        try:
-                            db = client[os.getenv("MONGO_DB")]
-                            collection = db[os.getenv("MONGO_COLLECTION")]
-
-                            collection.update_many(
-                                {},
-                                {
-                                    "$inc": {
-                                        "ISOtotalCalls": 5,
-                                        "MESOtotalCalls": 1,
-                                        "MESOsongsConverted": 1,
-                                    }
-                                },
-                                upsert=True  # Create document if it doesn't exist
-                            )
-                        except Exception as mongo_error:
-                            print(f"MongoDB Operation Error: {mongo_error}")
-                        finally:
-                            client.close()
-                    else:
-                        print("Skipping analytics due to MongoDB connection failure")
-                except Exception as e:
-                    print(f"MongoDB Setup Error: {e}")
+                # Get MongoDB client for background task
+                client = await get_mongo_client()
+                
+                # Start background task for MongoDB update
+                asyncio.create_task(update_song_analytics(client))
 
                 return {"status": "success", "url": "https://www.youtube.com/watch?v=" + str(final_song)}
 
@@ -497,6 +499,34 @@ route: "/playlist"
 description: "Converts a Spotify Playlist to a YouTube Playlist"
 """
 
+
+async def update_playlist_analytics(client, num_items):
+    try:
+        if client:
+            try:
+                db = client[os.getenv("MONGO_DB")]
+                collection = db[os.getenv("MONGO_COLLECTION")]
+
+                await collection.update_many(
+                    {},
+                    {
+                        "$inc": {
+                            "ISOtotalCalls": 5 * num_items,
+                            "MESOtotalCalls": 1,
+                            "MESOsongsConverted": num_items,
+                            "MESOplaylistsConverted": 1,
+                        }
+                    },
+                    upsert=True
+                )
+            except Exception as mongo_error:
+                print(f"MongoDB Operation Error: {mongo_error}")
+            finally:
+                client.close()
+        else:
+            print("Skipping analytics due to MongoDB connection failure")
+    except Exception as e:
+        print(f"MongoDB Setup Error: {e}")
 
 @app.get("/playlist")
 async def playlist(
@@ -529,12 +559,12 @@ async def playlist(
                     }
                     data = {"grant_type": "client_credentials"}
 
-                    response = requests.post(url, headers=headers, data=data)
-                    if response.status_code != 200:
-                        return {"status": "error", "message": "Failed to authenticate with Spotify"}
-                    
-                    response = response.json()
-                except requests.RequestException as e:
+                    # Use aiohttp instead of requests
+                    async with session.post(url, headers=headers, data=data) as response:
+                        if response.status != 200:
+                            return {"status": "error", "message": "Failed to authenticate with Spotify"}
+                        response = await response.json()
+                except Exception as e:
                     return {"status": "error", "message": f"Failed to connect to Spotify: {str(e)}"}
 
                 try:
@@ -544,15 +574,16 @@ async def playlist(
                         "Authorization": "Bearer " + response["access_token"],
                         "Content-Type": "application/json",
                     }
-                    playlist_response = requests.get(url, headers=headers)
                     
-                    if playlist_response.status_code == 404:
-                        return {"status": "error", "message": "Playlist not found. Please check if the playlist exists and is public."}
-                    elif playlist_response.status_code != 200:
-                        return {"status": "error", "message": "Failed to fetch playlist from Spotify"}
+                    # Use aiohttp instead of requests
+                    async with session.get(url, headers=headers) as playlist_response:
+                        if playlist_response.status == 404:
+                            return {"status": "error", "message": "Playlist not found. Please check if the playlist exists and is public."}
+                        elif playlist_response.status != 200:
+                            return {"status": "error", "message": "Failed to fetch playlist from Spotify"}
                         
-                    response = playlist_response.json()
-                except requests.RequestException as e:
+                        response = await playlist_response.json()
+                except Exception as e:
                     return {"status": "error", "message": f"Failed to fetch playlist: {str(e)}"}
 
                 if "error" in response:
@@ -564,11 +595,25 @@ async def playlist(
                 urlMap = defaultdict()
                 valid_songs = set()
                 
+                # Process songs in parallel
+                tasks = []
                 for key in response["items"]:
                     try:
                         if key.get("track", {}) and key["track"].get("name") and key["track"].get("id"):
                             urlMap[key["track"]["id"]] = None
                             valid_songs.add(key["track"]["id"])
+                            if key["track"]["id"] in valid_songs:
+                                task = asyncio.create_task(
+                                    process_indi_song(
+                                        session=session,
+                                        song=key,
+                                        youtubeAPIKEY=youtubeAPIKEY,
+                                        urlMap=urlMap,
+                                        response=response,
+                                        spotify_id=key["track"]["id"],
+                                    )
+                                )
+                                tasks.append(task)
                     except Exception as e:
                         print(f"Error processing song in playlist: {str(e)}")
                         continue
@@ -576,58 +621,10 @@ async def playlist(
                 if not valid_songs:
                     return {"status": "error", "message": "No valid songs found in playlist"}
 
-                tasks = []
-                for key in response["items"]:
-                    try:
-                        if (key.get("track", {}).get("name") 
-                            and key["track"]["id"] in valid_songs):
-                            task = asyncio.ensure_future(
-                                process_indi_song(
-                                    session=session,
-                                    song=key,
-                                    youtubeAPIKEY=youtubeAPIKEY,
-                                    urlMap=urlMap,
-                                    response=response,
-                                    spotify_id=key["track"]["id"],
-                                )
-                            )
-                            tasks.append(task)
-                    except Exception as e:
-                        print(f"Error creating task for song: {str(e)}")
-                        continue
-
                 try:
                     await asyncio.gather(*tasks)
                 except Exception as e:
                     return {"status": "error", "message": f"Error processing songs: {str(e)}"}
-
-                try:
-                    client = get_mongo_client()
-                    if client:
-                        try:
-                            db = client[os.getenv("MONGO_DB")]
-                            collection = db[os.getenv("MONGO_COLLECTION")]
-
-                            collection.update_many(
-                                {},
-                                {
-                                    "$inc": {
-                                        "ISOtotalCalls": 5 * len(response["items"]),
-                                        "MESOtotalCalls": 1,
-                                        "MESOsongsConverted": len(response["items"]),
-                                        "MESOplaylistsConverted": 1,
-                                    }
-                                },
-                                upsert=True  # Create document if it doesn't exist
-                            )
-                        except Exception as mongo_error:
-                            print(f"MongoDB Operation Error: {mongo_error}")
-                        finally:
-                            client.close()
-                    else:
-                        print("Skipping analytics due to MongoDB connection failure")
-                except Exception as e:
-                    print(f"MongoDB Setup Error: {e}")
 
                 end = time.time()
                 print(f"Time taken: {end-start}")
@@ -642,6 +639,12 @@ async def playlist(
                         if give_length == "yes":
                             error_response["length"] = len(response["items"])
                         return error_response
+
+                # Create MongoDB client without blocking
+                client = await get_mongo_client()
+                
+                # Start background task for MongoDB update without awaiting
+                asyncio.create_task(update_playlist_analytics(client, len(response["items"])))
 
                 result = {
                     "status": "success",
@@ -662,7 +665,7 @@ async def playlist(
 @app.get("/analytics", include_in_schema=False)
 async def analytics():
     try:
-        client = get_mongo_client()
+        client = await get_mongo_client()
         if not client:
             return {"status": "error", "message": "Failed to connect to MongoDB"}
 
@@ -670,10 +673,10 @@ async def analytics():
             db = client[os.getenv("MONGO_DB")]
             collection = db[os.getenv("MONGO_COLLECTION")]
 
-            all_data = collection.find({})
+            cursor = collection.find({})
             result = []
-            for data in all_data:
-                data.pop("_id")
+            async for data in cursor:
+                data.pop("_id", None)
                 result.append(data)
 
             return {"status": "success", "data": result} if result else {"status": "success", "message": "No data found"}
