@@ -120,8 +120,41 @@
             }
         }
 
+        .api-test-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: nowrap;
+            margin-bottom: 10px;
+        }
+
+        .api-test-container p {
+            margin: 0;
+            white-space: nowrap;
+        }
+
         /* if width is below 700 then make content container has 90% width */
         @media (max-width: 700px) {
+            .api-test-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .api-test-container button {
+                margin-bottom: 5px;
+            }
+
+            .api-test-container p {
+                text-align: center;
+                margin-bottom: 5px;
+            }
+
+            main {
+                min-height: calc(100vh - 120px);
+                margin-top: 20px;
+                padding: 20px;
+            }
+
             .content-container {
                 width: 90%;
             }
@@ -146,10 +179,10 @@
         <div class="content-container">
             <div class="left-section">
                 <!-- Put 3 buttons side by side, labelled "One Song", "Playlist with 10 songs", "Playlist with 50 songs" -->
-                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; margin-left: 10px; margin-right: 10px;">
-                    <p style="margin-right: 10px;">Try out the API with:</p>
-                    <button style="margin-right: 10px;" onclick="convertOneSong()" class="button">One Song</button>
-                    <button style="margin-right: 10px;" onclick="convertPlaylist(10)" class="button">Playlist with 10 songs</button>
+                <div class="api-test-container">
+                    <p>Try out the API with:</p>
+                    <button onclick="convertOneSong()" class="button">One Song</button>
+                    <button onclick="convertPlaylist(10)" class="button">Playlist with 10 songs</button>
                     <button onclick="convertPlaylist(50)" class="button">Playlist with 50 songs</button>
                 </div>
                 <input id="inputQuery" type="text" class="textbox" placeholder="Paste the URL From Spotify...">
@@ -276,7 +309,7 @@
             document.getElementById("outputURL").value = "https://melodysyncer.aryankeluskar.com/" + backendQuery.substring(2);
 
             const headers = apiKey !== 'default' ? { 'X-YouTube-API-Key': apiKey } : {};
-            
+
             const response = await fetch(backendQuery + "&give_length=yes", {
                 method: 'GET',
                 headers: headers
