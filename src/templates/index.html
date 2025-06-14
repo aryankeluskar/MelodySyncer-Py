@@ -1,352 +1,398 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="https://utfs.io/f/c27fef1f-1b34-4442-ab9e-cc2888c8237d-ov10jy.jpg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://utfs.io/f/c27fef1f-1b34-4442-ab9e-cc2888c8237d-ov10jy.jpg"
+    />
     <title>MelodySyncer Trial</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f2f2f2;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f2f2f2;
+      }
 
-        header {
-            background-color: #333;
-            color: white;
-            --tw-gradient-from: #c7d2fe var(--tw-gradient-from-position);
-            --tw-gradient-to: #e5e7eb var(--tw-gradient-to-position);
-            padding: 10px;
-            text-align: center;
-            font-family: Inter Tight, sans-serif;
-        }
+      header {
+        background-color: #333;
+        color: white;
+        --tw-gradient-from: #c7d2fe var(--tw-gradient-from-position);
+        --tw-gradient-to: #e5e7eb var(--tw-gradient-to-position);
+        padding: 10px;
+        text-align: center;
+        font-family:
+          Inter Tight,
+          sans-serif;
+      }
 
-        nav {
-            display: flex;
-            justify-content: center;
-            background-color: #444;
-            padding: 10px;
-        }
+      nav {
+        display: flex;
+        justify-content: center;
+        background-color: #444;
+        padding: 10px;
+      }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 20px;
-        }
+      nav a {
+        color: white;
+        text-decoration: none;
+        margin: 0 20px;
+      }
 
-        main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 80vh;
-        }
+      main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+      }
 
-        .content-container {
-            display: flexbox;
-            width: 60%;
-            background-color: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
+      .content-container {
+        display: flexbox;
+        width: 60%;
+        background-color: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
 
-        .left-section {
-            flex: 1;
-            padding: 20px;
-        }
+      .left-section {
+        flex: 1;
+        padding: 20px;
+      }
 
-        .right-section {
-            flex: 1;
-            padding: 20px;
-            background-color: #f2f2f2;
-        }
+      .right-section {
+        flex: 1;
+        padding: 20px;
+        background-color: #f2f2f2;
+      }
 
-        .textbox {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-        }
+      .textbox {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+      }
 
-        .label {
-            font-weight: bold;
-        }
+      .label {
+        font-weight: bold;
+      }
 
-        .button {
-            background-color: #333;
-            color: white;
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+      .button {
+        background-color: #333;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+      }
 
-        .textarea {
-            width: 100%;
-            height: 100px;
-            padding: 10px;
-            box-sizing: border-box;
-        }
+      .textarea {
+        width: 100%;
+        height: 100px;
+        padding: 10px;
+        box-sizing: border-box;
+      }
 
-        #outputURL,
-        #timeTaken {
-            height: 50px;
-            margin-bottom: 10px;
-        }
+      #outputURL,
+      #timeTaken {
+        height: 50px;
+        margin-bottom: 10px;
+      }
 
-        .progress-container {
-            display: none;
-            width: 100%;
-            height: 20px;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
+      .progress-container {
+        display: none;
+        width: 100%;
+        height: 20px;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
 
-        .progress-bar {
-            height: 100%;
-            width: 0;
-            background: linear-gradient(to right, lightgreen, darkgreen);
-            animation: progressBarAnimation 2s linear;
-            /* Default animation duration for tracks */
-        }
+      .progress-bar {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(to right, lightgreen, darkgreen);
+        animation: progressBarAnimation 2s linear;
+        /* Default animation duration for tracks */
+      }
 
-        @keyframes progressBarAnimation {
-            to {
-                width: 100%;
-            }
+      @keyframes progressBarAnimation {
+        to {
+          width: 100%;
         }
+      }
 
+      .api-test-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: nowrap;
+        margin-bottom: 10px;
+      }
+
+      .api-test-container p {
+        margin: 0;
+        white-space: nowrap;
+      }
+
+      /* if width is below 700 then make content container has 90% width */
+      @media (max-width: 700px) {
         .api-test-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: nowrap;
-            margin-bottom: 10px;
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .api-test-container button {
+          margin-bottom: 5px;
         }
 
         .api-test-container p {
-            margin: 0;
-            white-space: nowrap;
+          text-align: center;
+          margin-bottom: 5px;
         }
 
-        /* if width is below 700 then make content container has 90% width */
-        @media (max-width: 700px) {
-            .api-test-container {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .api-test-container button {
-                margin-bottom: 5px;
-            }
-
-            .api-test-container p {
-                text-align: center;
-                margin-bottom: 5px;
-            }
-
-            main {
-                min-height: calc(100vh - 120px);
-                margin-top: 20px;
-                padding: 20px;
-            }
-
-            .content-container {
-                width: 90%;
-            }
+        main {
+          min-height: calc(100vh - 120px);
+          margin-top: 20px;
+          padding: 20px;
         }
+
+        .content-container {
+          width: 90%;
+        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <header>
-        <h2>MelodySyncer - The Fastest Spotify to Youtube API Ever.</h2>
+      <h2>MelodySyncer - The Fastest Spotify to Youtube API Ever.</h2>
     </header>
 
     <nav>
-        <a href="https://dub.sh/melodysyncer">Home</a>
-        <a href="https://www.postman.com/aryankeluskar/workspace/all-apis-developed-by-aryan-keluskar/api/ef1cb49f-367a-4fad-8f81-6ea101c05057?action=share&creator=31514208"
-            target="_blank">Postman</a>
-        <a href="https://github.com/aryankeluskar/MelodySyncer" target="_blank">GitHub</a>
+      <a href="https://dub.sh/melodysyncer">Home</a>
+      <a
+        href="https://www.postman.com/aryankeluskar/workspace/all-apis-developed-by-aryan-keluskar/api/ef1cb49f-367a-4fad-8f81-6ea101c05057?action=share&creator=31514208"
+        target="_blank"
+        >Postman</a
+      >
+      <a href="https://github.com/aryankeluskar/MelodySyncer" target="_blank"
+        >GitHub</a
+      >
     </nav>
 
     <main>
-        
-        <div class="content-container">
-            <div class="left-section">
-                <!-- Put 3 buttons side by side, labelled "One Song", "Playlist with 10 songs", "Playlist with 50 songs" -->
-                <div class="api-test-container">
-                    <p>Try out MelodySyncer with:</p>
-                    <button onclick="convertPlaylist(10)" class="button">Playlist with 10 songs</button>
-                    <button onclick="convertPlaylist(50)" class="button">Playlist with 50 songs</button>
-                    <button onclick="convertOneSong()" class="button">One Song</button>
-                </div>
-                <input id="inputQuery" type="text" class="textbox" placeholder="Paste the URL From Spotify...">
-                <input id="inputAPIKEY" type="password" class="textbox"
-                    placeholder="Provide YouTube API Key (Optional, will be sent as X-YouTube-API-Key header)">
-                <!-- <label class="label">Description:</label> -->
-                <p>The URL should be of a track or a playlist (can be verified by checking if the url
-                    contains "track" or "playlist") </p>
-                <button onclick="convert()" id="convertButton" class="button">Convert!</button>
-                <!-- <div class="progress-container">
+      <div class="content-container">
+        <div class="left-section">
+          <!-- Put 3 buttons side by side, labelled "One Song", "Playlist with 10 songs", "Playlist with 50 songs" -->
+          <div class="api-test-container">
+            <p>Try out MelodySyncer with:</p>
+            <button onclick="convertPlaylist(10)" class="button">
+              Playlist with 10 songs
+            </button>
+            <button onclick="convertPlaylist(50)" class="button">
+              Playlist with 50 songs
+            </button>
+            <button onclick="convertOneSong()" class="button">One Song</button>
+          </div>
+          <input
+            id="inputQuery"
+            type="text"
+            class="textbox"
+            placeholder="Paste the URL From Spotify..."
+          />
+          <input
+            id="inputAPIKEY"
+            type="password"
+            class="textbox"
+            placeholder="Provide YouTube API Key (Optional, will be sent as X-YouTube-API-Key header)"
+          />
+          <!-- <label class="label">Description:</label> -->
+          <p>
+            The URL should be of a track or a playlist (can be verified by
+            checking if the url contains "track" or "playlist")
+          </p>
+          <button onclick="convert()" id="convertButton" class="button">
+            Convert!
+          </button>
+          <!-- <div class="progress-container">
                <div class="progress-bar" id="progressBar"></div>
             </div> -->
-
-            </div>
-            <div class="right-section">
-                <textarea class="textarea" id="outputURL" disabled="false"
-                    placeholder="The URL Request will be displayed here"></textarea>
-
-
-                <textarea class="textarea" id="outputArea" disabled="false"
-                    placeholder="The output will be displayed here"></textarea>
-
-                <textarea class="textarea" id="timeTaken" disabled="false"
-                    placeholder="The Time Taken will be displayed here"></textarea>
-            </div>
-
         </div>
+        <div class="right-section">
+          <textarea
+            class="textarea"
+            id="outputURL"
+            disabled="false"
+            placeholder="The URL Request will be displayed here"
+          ></textarea>
+
+          <textarea
+            class="textarea"
+            id="outputArea"
+            disabled="false"
+            placeholder="The output will be displayed here"
+          ></textarea>
+
+          <textarea
+            class="textarea"
+            id="timeTaken"
+            disabled="false"
+            placeholder="The Time Taken will be displayed here"
+          ></textarea>
+        </div>
+      </div>
     </main>
+  </body>
 
-</body>
-
-<script>
+  <script>
     function showError(message) {
-        document.getElementById("outputArea").value = "Error: " + message;
-        document.getElementById("outputArea").style.color = "red";
-        document.getElementById("timeTaken").value = "";
-        document.getElementById("outputURL").value = "";
+      document.getElementById("outputArea").value = "Error: " + message;
+      document.getElementById("outputArea").style.color = "red";
+      document.getElementById("timeTaken").value = "";
+      document.getElementById("outputURL").value = "";
     }
 
     function convertOneSong() {
-        document.getElementById("inputQuery").value = "https://open.spotify.com/track/58ge6dfP91o9oXMzq3XkIS?si=828d811d55864d9f";
+      document.getElementById("inputQuery").value =
+        "https://open.spotify.com/track/58ge6dfP91o9oXMzq3XkIS?si=828d811d55864d9f";
     }
 
     function convertPlaylist(numSongs) {
-        if (numSongs === 10) {
-            document.getElementById("inputQuery").value = "https://open.spotify.com/playlist/2oBDfXuiPFjXHklGYw8weR?si=6a4993797e0e4b91";
-        } else if (numSongs === 50) {
-            document.getElementById("inputQuery").value = "https://open.spotify.com/playlist/6wS8xBBCZzylqNfGEoCott?si=64676c824afd43bf";
-        }
+      if (numSongs === 10) {
+        document.getElementById("inputQuery").value =
+          "https://open.spotify.com/playlist/2oBDfXuiPFjXHklGYw8weR?si=6a4993797e0e4b91";
+      } else if (numSongs === 50) {
+        document.getElementById("inputQuery").value =
+          "https://open.spotify.com/playlist/6wS8xBBCZzylqNfGEoCott?si=64676c824afd43bf";
+      }
     }
 
     function resetUI() {
-        document.getElementById("outputArea").style.color = "black";
-        document.getElementById("outputArea").value = "";
-        document.getElementById("timeTaken").value = "";
-        document.getElementById("outputURL").value = "";
-        document.getElementById("convertButton").disabled = false;
-        document.getElementById("convertButton").style.opacity = 1;
-        document.getElementById("convertButton").innerHTML = "Convert!";
+      document.getElementById("outputArea").style.color = "black";
+      document.getElementById("outputArea").value = "";
+      document.getElementById("timeTaken").value = "";
+      document.getElementById("outputURL").value = "";
+      document.getElementById("convertButton").disabled = false;
+      document.getElementById("convertButton").style.opacity = 1;
+      document.getElementById("convertButton").innerHTML = "Convert!";
     }
 
     function validateSpotifyUrl(url) {
-        if (!url) {
-            showError("Please enter a Spotify URL");
-            return false;
-        }
-        if (!url.includes("open.spotify.com")) {
-            showError("Invalid URL. Please enter a valid Spotify URL");
-            return false;
-        }
-        if (!url.includes("track") && !url.includes("playlist")) {
-            showError("Invalid URL. URL must be a Spotify track or playlist");
-            return false;
-        }
-        return true;
+      if (!url) {
+        showError("Please enter a Spotify URL");
+        return false;
+      }
+      if (!url.includes("open.spotify.com")) {
+        showError("Invalid URL. Please enter a valid Spotify URL");
+        return false;
+      }
+      if (!url.includes("track") && !url.includes("playlist")) {
+        showError("Invalid URL. URL must be a Spotify track or playlist");
+        return false;
+      }
+      return true;
     }
 
     async function convert() {
-        resetUI();
-        const buttonElement = document.getElementById("convertButton");
-        const inputQuery = document.getElementById('inputQuery');
+      resetUI();
+      const buttonElement = document.getElementById("convertButton");
+      const inputQuery = document.getElementById("inputQuery");
 
-        if (!validateSpotifyUrl(inputQuery.value)) {
-            return;
-        }
+      if (!validateSpotifyUrl(inputQuery.value)) {
+        return;
+      }
 
-        buttonElement.disabled = true;
-        buttonElement.style.opacity = 0.5;
-        buttonElement.innerHTML = "Converting...";
+      buttonElement.disabled = true;
+      buttonElement.style.opacity = 0.5;
+      buttonElement.innerHTML = "Converting...";
 
-        try {
-            await performAPICall();
-        } catch (error) {
-            showError("An unexpected error occurred. Please try again later.");
-            console.error("Error during conversion:", error);
-        } finally {
-            buttonElement.disabled = false;
-            buttonElement.style.opacity = 1;
-            buttonElement.innerHTML = "Convert!";
-        }
+      try {
+        await performAPICall();
+      } catch (error) {
+        showError("An unexpected error occurred. Please try again later.");
+        console.error("Error during conversion:", error);
+      } finally {
+        buttonElement.disabled = false;
+        buttonElement.style.opacity = 1;
+        buttonElement.innerHTML = "Convert!";
+      }
     }
 
     async function performAPICall() {
-        const inputQuery = document.getElementById('inputQuery');
-        const startTime = new Date().getTime();
-        const apiKey = document.getElementById("inputAPIKEY").value || 'default';
-        let backendQuery = "";
+      const inputQuery = document.getElementById("inputQuery");
+      const startTime = new Date().getTime();
+      const apiKey = document.getElementById("inputAPIKEY").value || "default";
+      let backendQuery = "";
 
-        try {
-            if (inputQuery.value.includes("track")) {
-                let query = inputQuery.value.substring(inputQuery.value.indexOf("track/") + 6);
-                if (query.includes("?")) {
-                    query = query.substring(0, query.indexOf("?"));
-                }
-                backendQuery = `./song?query=${query}`;
-            } else if (inputQuery.value.includes("playlist")) {
-                let query = inputQuery.value.substring(inputQuery.value.indexOf("playlist/") + 9);
-                if (query.includes("?")) {
-                    query = query.substring(0, query.indexOf("?"));
-                }
-                backendQuery = `./playlist?query=${query}`;
-            }
-
-            document.getElementById("outputURL").value = "https://melodysyncer.aryankeluskar.com/" + backendQuery.substring(2);
-
-            const headers = apiKey !== 'default' ? { 'X-YouTube-API-Key': apiKey } : {};
-
-            const response = await fetch(backendQuery + "&give_length=yes", {
-                method: 'GET',
-                headers: headers
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-
-            if (data.status === "error") {
-                showError(data.message);
-                return;
-            }
-
-            const endTime = new Date().getTime();
-            const timeTaken = (endTime - startTime) / 1000;
-
-            if (inputQuery.value.includes("playlist")) {
-                const length = data.length || (data.list && data.list.length) || 0;
-                document.getElementById("outputArea").value = data.list;
-                document.getElementById("timeTaken").value = `Time Taken: ${timeTaken} seconds\nTime taken per song: ${timeTaken / length} seconds`;
-            } else {
-                document.getElementById("outputArea").value = data.url || JSON.stringify(data);
-                document.getElementById("timeTaken").value = `Time Taken: ${timeTaken} seconds`;
-            }
-
-        } catch (error) {
-            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                showError("Network error. Please check your internet connection.");
-            } else {
-                showError("Failed to process your request. Please try again later.");
-            }
-            console.error("API call error:", error);
+      try {
+        if (inputQuery.value.includes("track")) {
+          let query = inputQuery.value.substring(
+            inputQuery.value.indexOf("track/") + 6,
+          );
+          if (query.includes("?")) {
+            query = query.substring(0, query.indexOf("?"));
+          }
+          backendQuery = `./song?query=${query}`;
+        } else if (inputQuery.value.includes("playlist")) {
+          let query = inputQuery.value.substring(
+            inputQuery.value.indexOf("playlist/") + 9,
+          );
+          if (query.includes("?")) {
+            query = query.substring(0, query.indexOf("?"));
+          }
+          backendQuery = `./playlist?query=${query}`;
         }
-    }
-</script>
 
+        document.getElementById("outputURL").value =
+          "https://melodysyncer.aryankeluskar.com/" + backendQuery.substring(2);
+
+        const headers =
+          apiKey !== "default" ? { "X-YouTube-API-Key": apiKey } : {};
+
+        const response = await fetch(backendQuery + "&give_length=yes", {
+          method: "GET",
+          headers: headers,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.status === "error") {
+          showError(data.message);
+          return;
+        }
+
+        const endTime = new Date().getTime();
+        const timeTaken = (endTime - startTime) / 1000;
+
+        if (inputQuery.value.includes("playlist")) {
+          const length = data.length || (data.list && data.list.length) || 0;
+          document.getElementById("outputArea").value = data.list;
+          document.getElementById("timeTaken").value =
+            `Time Taken: ${timeTaken} seconds\nTime taken per song: ${timeTaken / length} seconds`;
+        } else {
+          document.getElementById("outputArea").value =
+            data.url || JSON.stringify(data);
+          document.getElementById("timeTaken").value =
+            `Time Taken: ${timeTaken} seconds`;
+        }
+      } catch (error) {
+        if (
+          error.name === "TypeError" &&
+          error.message.includes("Failed to fetch")
+        ) {
+          showError("Network error. Please check your internet connection.");
+        } else {
+          showError("Failed to process your request. Please try again later.");
+        }
+        console.error("API call error:", error);
+      }
+    }
+  </script>
 </html>
