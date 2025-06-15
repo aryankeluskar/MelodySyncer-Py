@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -24,9 +24,7 @@
         --tw-gradient-to: #e5e7eb var(--tw-gradient-to-position);
         padding: 10px;
         text-align: center;
-        font-family:
-          Inter Tight,
-          sans-serif;
+        font-family: Inter Tight, sans-serif;
       }
 
       nav {
@@ -100,6 +98,77 @@
       #timeTaken {
         height: 50px;
         margin-bottom: 10px;
+      }
+
+      .url-container {
+        position: relative;
+        margin-bottom: 10px;
+      }
+
+      .url-container .textarea {
+        margin-bottom: 0;
+        padding-right: 45px; /* Make room for the copy button */
+      }
+
+      .copy-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        color: #666;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .copy-btn:hover {
+        background-color: #f0f0f0;
+        color: #333;
+      }
+
+      .copy-btn:active {
+        background-color: #e0e0e0;
+      }
+
+      /* Toast styles */
+      #toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+      }
+
+      .toast {
+        background-color: #333;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        font-size: 14px;
+        opacity: 0;
+        transform: translateX(100%);
+        animation: slideIn 0.3s ease-out forwards,
+          fadeOut 0.3s ease-in 2.7s forwards;
+      }
+
+      @keyframes slideIn {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes fadeOut {
+        to {
+          opacity: 0;
+          transform: translateX(100%);
+        }
       }
 
       .progress-container {
@@ -223,12 +292,29 @@
             </div> -->
         </div>
         <div class="right-section">
-          <textarea
-            class="textarea"
-            id="outputURL"
-            disabled="false"
-            placeholder="The URL Request will be displayed here"
-          ></textarea>
+          <div class="url-container">
+            <textarea
+              class="textarea"
+              id="outputURL"
+              disabled="false"
+              placeholder="The URL Request will be displayed here"
+            ></textarea>
+            <button class="copy-btn" onclick="copyURL()" title="Copy URL">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path
+                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                ></path>
+              </svg>
+            </button>
+          </div>
 
           <textarea
             class="textarea"
@@ -243,9 +329,28 @@
             disabled="false"
             placeholder="The Time Taken will be displayed here"
           ></textarea>
+          <p>
+            Written in Python, made with ❤️ by
+            <a
+              href="https://aryankeluskar.com"
+              style="color: #000000; text-decoration: none"
+              target="_blank"
+              >Aryan Keluskar</a
+            >.<br /> <br />
+            Check out the new and even faster version built using Rust
+            <a
+              href="https://dub.sh/melodysyncer"
+              style="color: #000000; text-decoration: none"
+              target="_blank"
+              >at dub.sh/melodysyncer</a
+            >.
+          </p>
         </div>
       </div>
     </main>
+
+    <!-- Toast container -->
+    <div id="toast-container"></div>
   </body>
 
   <script>
@@ -259,6 +364,7 @@
     function convertOneSong() {
       document.getElementById("inputQuery").value =
         "https://open.spotify.com/track/58ge6dfP91o9oXMzq3XkIS?si=828d811d55864d9f";
+      updateURLPreview();
     }
 
     function convertPlaylist(numSongs) {
@@ -269,13 +375,13 @@
         document.getElementById("inputQuery").value =
           "https://open.spotify.com/playlist/6wS8xBBCZzylqNfGEoCott?si=64676c824afd43bf";
       }
+      updateURLPreview();
     }
 
     function resetUI() {
       document.getElementById("outputArea").style.color = "black";
       document.getElementById("outputArea").value = "";
       document.getElementById("timeTaken").value = "";
-      document.getElementById("outputURL").value = "";
       document.getElementById("convertButton").disabled = false;
       document.getElementById("convertButton").style.opacity = 1;
       document.getElementById("convertButton").innerHTML = "Convert!";
@@ -296,6 +402,57 @@
       }
       return true;
     }
+
+    function updateURLPreview() {
+      const inputQuery = document.getElementById("inputQuery");
+      const outputURL = document.getElementById("outputURL");
+      const url = inputQuery.value.trim();
+
+      if (!url) {
+        outputURL.value = "";
+        return;
+      }
+
+      if (!url.includes("open.spotify.com")) {
+        outputURL.value = "Invalid URL - must be a Spotify URL";
+        return;
+      }
+
+      if (!url.includes("track") && !url.includes("playlist")) {
+        outputURL.value = "Invalid URL - must be a Spotify track or playlist";
+        return;
+      }
+
+      try {
+        let backendQuery = "";
+
+        if (url.includes("track")) {
+          let query = url.substring(url.indexOf("track/") + 6);
+          if (query.includes("?")) {
+            query = query.substring(0, query.indexOf("?"));
+          }
+          backendQuery = `song?query=${query}`;
+        } else if (url.includes("playlist")) {
+          let query = url.substring(url.indexOf("playlist/") + 9);
+          if (query.includes("?")) {
+            query = query.substring(0, query.indexOf("?"));
+          }
+          backendQuery = `playlist?query=${query}`;
+        }
+
+        outputURL.value = `https://old-melodysyncer.aryankeluskar.com/${backendQuery}`;
+      } catch (error) {
+        outputURL.value = "Error parsing URL";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const inputQuery = document.getElementById("inputQuery");
+      inputQuery.addEventListener("input", updateURLPreview);
+      inputQuery.addEventListener("paste", function () {
+        setTimeout(updateURLPreview, 10);
+      });
+    });
 
     async function convert() {
       resetUI();
@@ -331,7 +488,7 @@
       try {
         if (inputQuery.value.includes("track")) {
           let query = inputQuery.value.substring(
-            inputQuery.value.indexOf("track/") + 6,
+            inputQuery.value.indexOf("track/") + 6
           );
           if (query.includes("?")) {
             query = query.substring(0, query.indexOf("?"));
@@ -339,16 +496,13 @@
           backendQuery = `./song?query=${query}`;
         } else if (inputQuery.value.includes("playlist")) {
           let query = inputQuery.value.substring(
-            inputQuery.value.indexOf("playlist/") + 9,
+            inputQuery.value.indexOf("playlist/") + 9
           );
           if (query.includes("?")) {
             query = query.substring(0, query.indexOf("?"));
           }
           backendQuery = `./playlist?query=${query}`;
         }
-
-        document.getElementById("outputURL").value =
-          "https://melodysyncer.aryankeluskar.com/" + backendQuery.substring(2);
 
         const headers =
           apiKey !== "default" ? { "X-YouTube-API-Key": apiKey } : {};
@@ -374,13 +528,17 @@
         if (inputQuery.value.includes("playlist")) {
           const length = data.length || (data.list && data.list.length) || 0;
           document.getElementById("outputArea").value = data.list;
-          document.getElementById("timeTaken").value =
-            `Time Taken: ${timeTaken} seconds\nTime taken per song: ${timeTaken / length} seconds`;
+          document.getElementById(
+            "timeTaken"
+          ).value = `Time Taken: ${timeTaken} seconds\nTime taken per song: ${
+            timeTaken / length
+          } seconds`;
         } else {
           document.getElementById("outputArea").value =
             data.url || JSON.stringify(data);
-          document.getElementById("timeTaken").value =
-            `Time Taken: ${timeTaken} seconds`;
+          document.getElementById(
+            "timeTaken"
+          ).value = `Time Taken: ${timeTaken} seconds`;
         }
       } catch (error) {
         if (
@@ -393,6 +551,32 @@
         }
         console.error("API call error:", error);
       }
+    }
+
+    function copyURL() {
+      const outputURL = document.getElementById("outputURL");
+      const textToCopy = outputURL.value;
+
+      const tempInput = document.createElement("input");
+      tempInput.value = textToCopy;
+      document.body.appendChild(tempInput);
+
+      tempInput.select();
+      document.execCommand("copy");
+
+      document.body.removeChild(tempInput);
+
+      // Show toast
+      const toastContainer = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = "URL copied to clipboard!";
+      toastContainer.appendChild(toast);
+
+      // Remove toast after 3 seconds
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
     }
   </script>
 </html>

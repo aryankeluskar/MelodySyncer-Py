@@ -413,13 +413,9 @@ async def process_indi_song(session, song, youtubeAPIKEY, urlMap, response, spot
 
 
 """
-route: "/song"
-description: "Converts a Spotify Song to a YouTube Song"
-parameters:
-    - query: Spotify song ID (required)
-    - X-YouTube-API-Key: YouTube API Key (optional, can be passed as header or query parameter)
+@param client: MongoDB client
+@description: updates the analytics of the song
 """
-
 
 async def update_song_analytics(client):
     try:
@@ -447,6 +443,15 @@ async def update_song_analytics(client):
             print("Skipping analytics due to MongoDB connection failure")
     except Exception as e:
         print(f"MongoDB Setup Error: {e}")
+
+
+"""
+route: "/song"
+description: "Converts a Spotify Song to a YouTube Song"
+parameters:
+    - query: Spotify song ID (required)
+    - X-YouTube-API-Key: YouTube API Key (optional, can be passed as header or query parameter)
+"""
 
 @app.get("/song")
 async def song(query: str = "null", youtubeAPIKEY: Optional[str] = None, request: Request = None):
@@ -721,3 +726,16 @@ async def analytics():
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse(templates_dir + "/favicon.ico")
+
+@app.get("/repeat", include_in_schema=False)
+async def repeat(
+        text: str = "", count: int = 1, request: Request = None
+):
+    try:
+        return {
+            "result": text * count,
+            "original_text": text,
+            "count": count
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"An unexpected error occurred: {str(e)}"}

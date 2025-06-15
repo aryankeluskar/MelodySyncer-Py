@@ -1,14 +1,17 @@
-# MelodySyncer - The Fastest Spotify to Youtube API Ever.
+# MelodySyncer - Archive of the Old API
 
-MelodySyncer is a **Web API** to convert Spotify songs or playlists to their Youtube equivalent. It is also the **most accurate** since it uses a unique scoring system that minimizes searching credits and maximises accuracy by factoring in song metadata. Takes less than **100 milliseconds** per song! Built using Async Python + FastAPI, hosted on Vercel.
+> [!note]
+> When I was 17, I wrote this API to help out an indie music app. It took less than 100 milliseconds per song, which was already **30-50x** faster than every other conversion API, but I knew I could do better. Therefore, I took the ultimate decision of re-writing this API in Rust, which you can find at [dub.sh/melodysyncer](https://dub.sh/melodysyncer).
 
-#### You get: _Skip manual searching, Directly get a List, Peace of Mind_ <br> I get _(hopefully): Star, Heart, Follow :)_
+> I am truly humbled by all of the 31,000 requests this API has received over the past year. This project represented a big leap in my journey, and I hope to continue to make more projects like this in the future ❤️
 
-## Usage
+#### You get: Skip manual searching, Directly get a List, Peace of Mind <br> I get (hopefully): Star, Heart, Follow :)
 
-Visit [dub.sh/melodysyncer](https://dub.sh/melodysyncer) to access this API. Check out detailed API documentation [here](https://melodysyncer.aryankeluskar.com/docs) generated with OpenAPI <br>
+## Usage-Old
 
-**Example**: `https://melodysyncer.aryankeluskar.com/playlist?query=7fITt66rmO4QIeNs2LPRDj` responds with [a list of YouTube Links](## "can't reveal links in README for copyright purposes") which can be processed with `HttpRequest` in Java, or `requests.get` in Python. This data can be stored in an Array or List for further processing.
+This version is built using Async Python + FastAPI. It was the fastest Spotify to Youtube API ever at the time which could convert Spotify songs or playlists to their Youtube equivalent. It is also the **most accurate** by factoring in song metadata. Visit [dub.sh/old-melodysyncer](https://dub.sh/old-melodysyncer) to access this API. Check out detailed API documentation [here](https://old-melodysyncer.aryankeluskar.com/docs) generated with OpenAPI <br>
+
+**Example**: `https://old-melodysyncer.aryankeluskar.com/playlist?query=7fITt66rmO4QIeNs2LPRDj` responds with [a list of YouTube Links](## "can't reveal links in README for copyright purposes") which can be processed with `HttpRequest` in Java, or `requests.get` in Python. This data can be stored in an Array or List for further processing.
 
 ### GET /
 

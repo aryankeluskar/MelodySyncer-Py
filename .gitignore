@@ -7,3 +7,5 @@ testmongo.py
 sample.json
 response.txt
 .env*.local
+
+.DS_Store
